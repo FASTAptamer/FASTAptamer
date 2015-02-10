@@ -1,0 +1,244 @@
+#!/usr/bin/env perl
+
+## Last Modified January 19th, 2015 22:03 CST
+
+## Citation:
+## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
+## "FASTAptamer: A Bioinformatic Toolkit for High-Throughput Sequence Analysis of 
+## Combinatorial Selections." Molecular Therapy — Nucleic Acids. 2015.
+## DOI: 10.1038/mtna.2015.4
+
+## Distributed under GNU General Public License v3
+
+
+use Getopt::Long;   ## Core Perl module for command line options/arguments
+
+my $start = time;           ## Starts program execution timer
+my $infile;                 ## Variable for input file
+my $outfile;                ## Variable for output file
+my $defined_edit_distance;  ## Variable (integer) for user-defined edit distance
+my $help;                   ## true/false variable for help screen
+my $quiet;                  ## true/false to suppress standard output
+my $filter = 0;				## Variable to define a read filter for entries
+my $version;                ## true/false variable for version screen
+
+                                           ## Take command line arguments for...
+GetOptions (    "infile=s" => \$infile,    ## ... input file
+                "outfile=s" => \$outfile,  ## ... output file
+                "distance=i" => \$defined_edit_distance,  ## ... edit distance
+                "filter=f" => \$filter,    ## ... read filter
+                "help" => \$help,          ## ... help screen
+                "version" => \$version,    ## ... version screen
+                "quiet" => \$quiet);       ## ... supress standard output
+
+if ($help){         ## Prints help screen if $help returns as true
+print <<"HELP";
+	
+--------------------------------------------------------------------------------
+                              FASTAptamer-Cluster
+--------------------------------------------------------------------------------
+
+Usage: fastaptamer_cluster [-h] [-i INFILE] [-o OUTFILE] [-d #] [-f #] [-q] [-v]
+
+    [-h]            = Help screen.
+    [-i INFILE]     = Input file from FASTAptamer-Count. REQUIRED.
+    [-o OUTFILE]    = Output file, FASTA format. REQUIRED.
+    [-d]            = Edit distance for clustering sequences. REQUIRED.
+    [-f]            = Read filter. Only sequences with total reads greater than
+                      the value supplied will be clustered.
+    [-q]            = Quiet mode.  Suppresses standard output of file I/O, numb-
+                      er of clusters, cluster size and execution time.
+    [-v]            = Display version.
+
+FASTAptamer-Cluster uses the Levenshtein algorithm to cluster together sequences
+based on a user-defined edit distance.  The most abundant and unclustered seque-
+nce is used as the "seed sequence" for which edit distance is calculated from.  
+Output is FASTA with the following information on the identifier line for each 
+sequence entry:
+
+    >Rank-Reads-RPM-Cluster#-RankWithinCluster-EditDistanceFromSeed
+    SEQUENCE
+
+To prevent clustering of sequences not highly sampled (and improve execution ti-
+me), invoke the read filter and enter a number.  Only sequences with total reads
+greater than the number entered will be clustered. 
+
+Input for FASTAptamer-Cluster MUST come from a FASTAptamer-Count output file. 
+
+PLEASE NOTE: This is a computationally intense program that can take multiple h-
+ours to finish depending on the size and complexity of your population. Utilize
+the read filter [-f] to improve execution time. 
+
+HELP
+exit;
+}
+
+if (defined $version){                     ## Print version screen if -v is true
+    print <<"VERSION";
+	
+FASTAptamer v1.0.2
+	
+VERSION
+exit;
+}
+
+##########################################	
+## Open input file or exit with warning  #
+##########################################
+
+open (INPUT, '<', $infile) or die 
+"\nCould not open input file or no input file was specified.\nSee help documentation [-h], README, or User's Guide for program usage.\n";
+
+##########################################
+## Open output file or exit with warning #
+##########################################
+
+open (OUTPUT, '>', $outfile) or die 
+"\nCould not open output file or no input file was specified.\See help documentation [-h], README, or User's Guide for program usage.\n";
+
+###############################################
+## Exit with warning if no distance specified #
+###############################################
+
+unless ($defined_edit_distance) { 
+die "\nNo edit distance specified.\nSee help documentation [-h], README, or User's Guide for program usage.\n"; }
+
+my @sequence_and_info;   ## Array to contain each FASTA entry individually
+my $entries;             ## Variable to keep track of the number of entries
+
+$/= ">";   ## Change default input record separator to read FASTA formatted file
+
+while (<INPUT>){                             ## Reads through entire input file
+    if ($_ =~ /(\d+-\d+-\d+.*\d*\n\w+)/){    ## Regex for FASTAptamer-Count format
+        my @read_count_test = split /-/, $1; ## Splits entry by dashes, loads array
+        if ($read_count_test[1] > $filter){     ## Tests for read count filter
+            push @sequence_and_info, $1;         ## Add each matched entry to array
+            $entries++;                          ## Increase entry count by 1
+        }
+    }
+}
+
+close INPUT;  ## Closes input file
+
+unless ($quiet){  ## Unless -q option is invoked, print this warning and summary
+	print "\n**************************************************";
+    print "\nClustering is a computationally intense process.\n";
+    print "Please be patient as clustering can take several\n";
+    print "hours for a single file.  For faster clustering\n";
+    print "use the read filter [-f] to avoid clustering of \n";
+    print "sequences not highly sampled.\n";
+    print "**************************************************";
+    print "\n\nTotal number of sequences to cluster: $entries.\n";
+    print "\nCluster\tUnique Sequences\tReads\tRPM\n";
+}
+
+my $current_cluster = 1;  ## This variable defines what cluster we're working on 
+
+iterate(@sequence_and_info);  ## Sends array with sequence entries to subroutine
+
+###############################################
+##   SUBROUTINE THAT BEGINS TO PROCESS FILE   #
+## One iteration generates a single cluster   #
+## and then repeats w/  unclustered sequences #
+## for next cluster                           #
+###############################################
+
+sub iterate {
+    my ( $top_entry, @entries ) = @_; ## Takes "seed sequence" and remaining entries 
+    my @keepers; ## Array to store unclustered entries
+    my @current_seq_info = split /\n/, $top_entry; 
+    ## Splits entry into metrics (reads, rank, RPM) and the "seed" sequence
+    my $cluster_rank = 1; ## Defines that seed sequence is ranked #1
+
+    print OUTPUT ">$current_seq_info[0]-$current_cluster-$cluster_rank-0\n$current_seq_info[1]\n";
+    ## Prints current seed sequence in FASTAptamer-Cluster format
+
+	my @current_seq_metrics = split /-/, $current_seq_info[0]; ## Split sequence identifier line
+	my $current_cluster_reads = $current_seq_metrics[1]; ## Take reads to tally cluster size
+	my $current_cluster_rpm = $current_seq_metrics[2]; ## Take RPM to tally cluster size in RPM
+
+    for (@entries) { ## for each entry left in array send to calculate distance 
+    	my @comparison_seq_info = split /\n/, $_; ## Split entry into metrics and sequence
+    	my @comparison_seq_metrics = split /-/, $comparison_seq_info[0]; ## Split identifier line
+    	my $comparison_seq_reads = $comparison_seq_metrics[1];  ## Take reads to tally cluster size
+    	my $comparison_seq_rpm = $comparison_seq_metrics[2];  ## Take RPM to tally cluster size
+        my $distance = levenshtein( $current_seq_info[1], $comparison_seq_info[1] );
+        ## sends comparison sequence to compare against current seed sequence, returns distances
+        if ( $distance > $defined_edit_distance ) { ## If distance is greater than defined
+            push @keepers, $_;  ## Add to array for comparison in next iteration
+        }
+        elsif ( $distance <= $defined_edit_distance ){ ## If distance is less than or equal to defined
+        	$cluster_rank++;  ## Increment the cluster rank
+        	$current_cluster_reads += $comparison_seq_reads; ## Add reads to cluster reads tally
+        	$current_cluster_rpm += $comparison_seq_rpm;  ## Add RPM to cluster RPM tally
+        	print OUTPUT ">$comparison_seq_info[0]-$current_cluster-$cluster_rank-$distance\n";
+        	print OUTPUT "$comparison_seq_info[1]\n"; ## Print entry in output file
+        }
+    }
+
+    unless ($quiet) { print "$current_cluster\t$cluster_rank\t$current_cluster_reads\t$current_cluster_rpm\n"; }
+    ## Display cluster number, number of unique sequences, reads and RPM
+    $current_cluster++; ## Increment cluster number prior to next cluster
+
+    if (@keepers) { ## Subroutine within subroutine for sequences that are unclustered
+        iterate(@keepers);
+    }
+}
+
+my $duration = time - $start; ## Calculates how much time has elapsed since start
+
+unless ($quiet) { ## Displays summary report unless -q is invoked
+    print "\nInput file: \"$infile\".\n";
+    print "Output file: \"$outfile\".\n";
+    print "Execution time: $duration s.\n"; 
+}
+
+#############################################################################
+## The subroutines below calculates the Levenshtein edit distance for the   #
+## current "seed" sequence and the comparison sequence that are sent to it  #
+#############################################################################
+
+
+sub levenshtein {
+	my ($s1, $s2) = @_;
+	my ($len1, $len2) = (length $s1, length $s2);
+	
+	return $len2 if ($len1 == 0);
+	return $len1 if ($len2 == 0);
+	
+	my %mat;
+	
+	for (my $i = 0; $i <= $len1; ++$i){
+		for (my $j = 0; $j <= $len2; ++$j){
+			$mat{$i}{$j} = 0;
+			$mat{0}{$j} = $j;
+		}
+		$mat{$i}{0} = $i;
+	}
+	
+	my @ar1 = split(//, $s1);
+	my @ar2 = split(//, $s2);
+
+	for (my $i = 1; $i <= $len1; ++$i){
+		for (my $j = 1; $j <= $len2; ++$j){
+			my $cost = ($ar1[$i-1] eq $ar2[$j-1]) ? 0 : 1;
+			$mat{$i}{$j} = min([$mat{$i-1}{$j} + 1,
+			$mat{$i}{$j-1} + 1,
+			$mat{$i-1}{$j-1} + $cost]);
+		}
+	}
+    return $mat{$len1}{$len2};
+}
+
+sub min
+{
+    my @list = @{$_[0]};
+    my $min = $list[0];
+
+    foreach my $i (@list)
+    {
+        $min = $i if ($i < $min);
+    }
+
+    return $min;
+}

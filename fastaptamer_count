@@ -1,0 +1,166 @@
+#!/usr/bin/env perl
+
+## Last Modified January 19th, 2015 22:22 CST
+
+## Citation:
+## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
+## FASTAptamer: A Bioinformatic Toolkit for High-Throughput Sequence Analysis of 
+## Combinatorial Selections. Molecular Therapy — Nucleic Acids. 2015.
+## DOI: 10.1038/mtna.2015.4
+
+## Distributed under GNU General Public License v3
+
+use Getopt::Long;    ## Core Perl module for command line arguments/options
+
+my $start = time;    ## Starts program execution timer
+my $input_fh;        ## Input file handle
+my $output_fh;       ## Output file handle
+my $quiet;           ## true/false variable for summary report supression
+my $help;            ## true/false variable for help screen
+my $version;         ## true/false variable for version screen
+
+                                           ## Take command line arguments for...
+GetOptions (    "input=s" => \$input_fh,        ## ...input file
+                "output=s" => \$output_fh,      ## ...output file
+                "quiet" => \$quiet,             ## ...supressing std. out
+                "version" => \$version,         ## ...showing version screen
+                "help" => \$help);              ## ...showing help screen
+		
+if (defined $help){                           ## Print help screen if -h is true
+    print <<"HELP";
+	
+--------------------------------------------------------------------------------
+                               FASTAptamer-Count
+--------------------------------------------------------------------------------
+
+Usage: fastaptamer_count [-h] [-q] [-v] [-i INFILE] [-o OUTFILE] 
+
+    [-h]            = Help screen.
+    [-q]            = Suppress STDOUT of run report.
+    [-v]            = Display version.
+    [-i INFILE]     = FASTQ input file. REQUIRED.
+    [-o OUTFILE]    = FASTA output file. REQUIRED.
+
+FASTAptamer-Count serves as the gateway to the FASTAptamer toolkit.  For a given
+.FASTQ input file, FASTAptamer-Count will determine the number of times each se-
+quence was read, rank and sort sequences by decreasing total reads, and normali-
+ze sequence frequency to reads per million. Output is generated as a non-redund-
+ant FASTA file in the following format for each sequence:
+
+        >RANK-READS-RPM
+        SEQUENCE
+		
+Summary report (total reads, unique reads, and execution time) is displayed as 
+STDOUT at program completion unless [-q] is invoked.
+
+HELP
+exit;
+}
+
+if (defined $version){                     ## Print version screen if -v is true
+    print <<"VERSION";
+	
+FASTAptamer v1.0.2
+	
+VERSION
+exit;
+}
+
+##########################################	
+## Open input file or exit with warning  #
+##########################################
+
+open (INPUT, '<', $input_fh) or die		
+"\nCould not open input file or no input file was specified.\n
+See help documentation [-h], README, or User's Guide for program usage.\n";
+
+##########################################
+## Open output file or exit with warning #
+##########################################
+
+open (OUTPUT, '>', $output_fh) or die		
+"\nCould not open output file or no output file was specified.\n
+See help documentation [-h], README, or User's Guide for program usage.\n";
+
+###############################################
+## Create a hash for sequence reads where key #
+## is the sequence and value is read count    #
+###############################################
+
+my %sequence_reads;	
+
+my $entries = 0;    ## Counts the number of entries processed
+
+$/ = "@"; ## Change default input record separator to read FASTQ formatted file	
+
+################################################################################
+## Read input file and for each entry, add sequence or increment value in hash #
+################################################################################
+
+while (<INPUT>){
+    if ($_ =~ /.+\n(\S+)\n.+\n.+/){
+        my $sequence = $1;
+        $sequence_reads{$sequence} += 1;
+        $entries++;
+    }
+}
+
+close INPUT;
+
+############################################
+## Sort hash by decreasing read count by   #
+## converting to arrays of values and keys #
+############################################
+
+my @keys = sort { $sequence_reads{$b} <=> $sequence_reads{$a} } keys(%sequence_reads);
+my @vals = @sequence_reads{@keys};
+
+##################################################################################
+## Using both arrays, print to output the FASTA formatted file containing        #
+## the sequence rank, reads, reads per million, and sequence. The extra          #
+## scalars here are used to ensure that sequences with equal read counts         #
+## receive the same rank value, and that the next untied value is properly       #
+## assigned a rank that takes into account the number of tied values before it,  #
+## also known as standard competition ranking.                                   #
+##################################################################################
+
+my $last_reads_count = $vals[0];
+my $rank = 1;
+
+for my $i (0..$#keys){
+    my $current_reads_count = $vals[$i];
+    if ($current_reads_count < $last_reads_count){
+        $rank = $i + 1; 
+        print OUTPUT ">$rank-$vals[$i]-";
+        printf OUTPUT "%.2f", ($current_reads_count/$entries)*(1000000);
+        print OUTPUT "\n";
+        print OUTPUT "$keys[$i]\n";
+		
+    }
+    elsif ($current_reads_count == $last_reads_count){
+        print OUTPUT ">$rank-$vals[$i]-";
+        printf OUTPUT "%.2f", ($current_reads_count/$entries)*(1000000);
+        print OUTPUT "\n";
+        print OUTPUT "$keys[$i]\n";
+    }
+    $last_reads_count = $vals[$i];
+	
+}
+
+close OUTPUT;
+
+##################################################################################
+## Unless the -q option is invoked, the following statistics are printed as      #
+## standard output.                                                              #
+##################################################################################
+
+unless ($quiet){
+    print "\n$entries total sequences.  " . ($#keys + 1) . " unique sequences.\n";
+    print "Input file: \"$input_fh\".\n";
+    print "Output file: \"$output_fh\".\n";
+
+    my $duration = time - $start;
+    print "Execution time: $duration s.\n";
+}
+
+exit;

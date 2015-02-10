@@ -1,0 +1,417 @@
+#!/usr/bin/env perl
+
+## Last Modified January 19th, 2015 22:22 CST
+
+## Citation:
+## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
+## "FASTAptamer: A Bioinformatic Toolkit for High-Throughput Sequence Analysis of 
+## Combinatorial Selections." Molecular Therapy — Nucleic Acids. 2015.
+## DOI: 10.1038/mtna.2015.4
+
+## Distributed under GNU General Public License v3
+
+use Getopt::Long;    ## Core Perl module for command line options/arguments
+
+my $fileX_fh;     ## Variable for input file X
+my $fileY_fh;     ## Variable for input file Y
+my $output_fh;    ## Variable for output file
+my $help;         ## true/false variable for help screen
+my $all;          ## true/false variable for displaying all values
+my $version;      ## true/false variable for displaying help screen
+
+                                           ## Take command line arguments for...
+GetOptions (    "X_file=s" => \$fileX_fh,     ## ... input file X
+		"Y_file=s" => \$fileY_fh,     ## ... input file Y
+		"output=s" => \$output_fh,    ## ... output file
+		"help" => \$help,             ## ... help screen
+		"quiet" => \$quiet,           ## ... supress standard output
+        "version" => \$version,       ## ... version screen
+		"all" => \$all);              ## ... displaying all sequences
+		
+if (defined $help){            ## Prints help screen if $help returns as true
+    print <<"HELP";
+	
+--------------------------------------------------------------------------------
+                               FASTAptamer-Compare
+--------------------------------------------------------------------------------
+
+Usage: fastaptamer_compare [-h] [-x INFILE] [-y INFILE] [-o OUTFILE] [-q] [-a]
+                           [-v]
+
+    [-h]            = Help screen.
+    [-x INFILE]     = Input file (from FASTAptamer-Count). REQUIRED.
+    [-y INFILE]     = Input file (from FASTAptamer-Count). REQUIRED.
+    [-o OUTFILE]    = Plain text output file with tab separated values. REQUIRED
+    [-q]            = Quiet mode.  Suppresses standard output of file I/O 
+                      and execution time.
+    [-a]            = Output all sequences, including those present in only
+                      one input file.  Default behavior suppresses output 
+                      of sequences without a match.
+    [-v]            = Display version.
+
+FASTAptamer-Compare facilitates statistical analysis of two populations by rapi-
+dly generating a tab-delimited output file that lists each unique sequence along
+with RPM (reads per million) in each population file (if available) and log(bas-
+e 2) of the ratio of their RPM values in each population. 
+
+RPM data for both populations can be utilized to generate an XY-scatter plot of
+sequence distribution across two populations.  FASTAptamer-Compare also facilit-
+ates the generation of a histogram of the sequence distribution by creating 102 
+bins for the log(base2) values.  This histogram can provide a quick visual comp-
+arison of the two populations: distributions centered around 0 indicate similar 
+populations, while distributions shifted to the left or right indicate overall 
+enrichment or depletion.
+
+Input for FASTAptamer-Compare MUST come from FASTAptamer-Count output files.
+
+HELP
+exit;
+}
+
+if (defined $version){                     ## Print version screen if -v is true
+    print <<"VERSION";
+	
+FASTAptamer v1.0.2
+	
+VERSION
+exit;
+}
+
+##########################################	
+## Open input file or exit with warning  #
+##########################################
+
+open X_file, '<', $fileX_fh or die 
+"\nCould not open input file x, or no input file was specified.\n
+See help documentation [-h], README, or User's Guide for program usage.\n";
+
+##########################################	
+## Open input file or exit with warning  #
+##########################################
+
+open Y_file, '<', $fileY_fh or die 
+"\nCould not open input file y, or no input file was specified.\n
+See help documentation [-h], README, or User's Guide for program usage.\n";
+
+##########################################
+## Open output file or exit with warning #
+##########################################
+
+open OUTPUT, '>', $output_fh or die 
+"\nCould not create output file or no output file was specified.\n
+See help documentation [-h], README, or User's Guide for program usage.\n";
+
+$/ = ">"; ## Change default input record separator to read FASTA formatted file
+
+my $start = time;      ## Record start of run-time
+
+my %sequences_in_x;    ## Hash variable for sequences present in input file X
+my %sequences_in_y;    ## Hash variable for sequences present in input file Y
+
+################################################
+## Variables for the creation of bin "buckets" #
+################################################
+
+my $bin_low=0;
+my $bin_1=0; my $bin_2=0; my $bin_3=0; my $bin_4=0;  
+my $bin_5=0; my $bin_6=0; my $bin_7=0; my $bin_8=0;  
+my $bin_9=0; my $bin_10=0; my $bin_11=0; my $bin_12=0;  
+my $bin_13=0; my $bin_14=0; my $bin_15=0; my $bin_16=0;  
+my $bin_17=0; my $bin_18=0; my $bin_19=0; my $bin_20=0;  
+my $bin_21=0; my $bin_22=0; my $bin_23=0; my $bin_24=0;  
+my $bin_25=0; my $bin_26=0; my $bin_27=0; my $bin_28=0;  
+my $bin_29=0; my $bin_30=0; my $bin_31=0; my $bin_32=0;  
+my $bin_33=0; my $bin_34=0; my $bin_35=0; my $bin_36=0;  
+my $bin_37=0; my $bin_38=0; my $bin_39=0; my $bin_40=0;  
+my $bin_41=0; my $bin_42=0; my $bin_43=0; my $bin_44=0;  
+my $bin_45=0; my $bin_46=0; my $bin_47=0; my $bin_48=0;  
+my $bin_49=0; my $bin_50=0; my $bin_51=0; my $bin_52=0;  
+my $bin_53=0; my $bin_54=0; my $bin_55=0; my $bin_56=0;  
+my $bin_57=0; my $bin_58=0; my $bin_59=0; my $bin_60=0;  
+my $bin_61=0; my $bin_62=0; my $bin_63=0; my $bin_64=0;  
+my $bin_65=0; my $bin_66=0; my $bin_67=0; my $bin_68=0;  
+my $bin_69=0; my $bin_70=0; my $bin_71=0; my $bin_72=0;  
+my $bin_73=0; my $bin_74=0; my $bin_75=0; my $bin_76=0;  
+my $bin_77=0; my $bin_78=0; my $bin_79=0; my $bin_80=0;  
+my $bin_81=0; my $bin_82=0; my $bin_83=0; my $bin_84=0;  
+my $bin_85=0; my $bin_86=0; my $bin_87=0; my $bin_88=0;  
+my $bin_89=0; my $bin_90=0; my $bin_91=0; my $bin_92=0;  
+my $bin_93=0; my $bin_94=0; my $bin_95=0; my $bin_96=0;  
+my $bin_97=0; my $bin_98=0; my $bin_99=0; my $bin_100=0;
+my $bin_high=0;
+
+################################################################################
+## While loops iterate through the input files and reads each FASTA entry      #
+## and populates a hash where the key is the sequence and the value is the     #
+## reads per million for the sequence.					                       #
+################################################################################
+
+while (<X_file>){
+    if ($_ =~ /\d+-\d+-(\d+\.?\d*)\n(\S+)/){
+        my $reads_per_million = $1;
+        my $sequence = $2;
+        $sequences_in_x{$sequence} = $reads_per_million;
+    }
+}
+
+close X_file;
+
+while (<Y_file>){
+    if ($_ =~ /\d+-\d+-(\d+\.?\d*)\n(\S+)/){
+        my $reads_per_million = $1;
+        my $sequence = $2;
+        $sequences_in_y{$sequence} = $reads_per_million;
+    }
+}
+
+close Y_file;
+
+################################################################################
+
+print OUTPUT "Sequence\tRPM (x)\tRPM (y)\tlog(base2)(y/x)\n";
+
+for my $sequence_key (keys %sequences_in_x){
+    my $rpm_x = $sequences_in_x{$sequence_key};
+    my $rpm_y = $sequences_in_y{$sequence_key};
+    if ($rpm_y){
+        delete $sequences_in_x{$sequence_key};
+        delete $sequences_in_y{$sequence_key};
+        my $ratio = $rpm_y/$rpm_x;
+        my $log_val = log($ratio)/log(2);
+        print OUTPUT "$sequence_key\t$rpm_x\t$rpm_y\t$log_val\n";
+        &bin_bucket ($log_val);
+    }
+}
+
+if (defined $all){
+    for my $sequence_key (keys %sequences_in_x){
+        my $rpm_a = $sequences_in_x{$sequence_key};
+        delete $sequences_in_x{$sequence_key};
+        print OUTPUT "$sequence_key\t$rpm_a\n";
+    }
+
+    for my $sequence_key (keys %sequences_in_y){
+        my $rpm_b = $sequences_in_y{$sequence_key};
+        delete $sequences_in_y{$sequence_key};
+        print OUTPUT "$sequence_key\t\t$rpm_b\n";
+    }
+}
+
+print OUTPUT "\n\nHISTOGRAM DATA\nBin\tFrequency\n";
+print OUTPUT "\< -5\t$bin_low\n";
+print OUTPUT "-4.9\t$bin_1\n";
+print OUTPUT "-4.8\t$bin_2\n";
+print OUTPUT "-4.7\t$bin_3\n";
+print OUTPUT "-4.6\t$bin_4\n";
+print OUTPUT "-4.5\t$bin_5\n";
+print OUTPUT "-4.4\t$bin_6\n";
+print OUTPUT "-4.3\t$bin_7\n";
+print OUTPUT "-4.2\t$bin_8\n";
+print OUTPUT "-4.1\t$bin_9\n";
+print OUTPUT "-4.0\t$bin_10\n";
+print OUTPUT "-3.9\t$bin_11\n";
+print OUTPUT "-3.8\t$bin_12\n";
+print OUTPUT "-3.7\t$bin_13\n";
+print OUTPUT "-3.6\t$bin_14\n";
+print OUTPUT "-3.5\t$bin_15\n";
+print OUTPUT "-3.4\t$bin_16\n";
+print OUTPUT "-3.3\t$bin_17\n";
+print OUTPUT "-3.2\t$bin_18\n";
+print OUTPUT "-3.1\t$bin_19\n";
+print OUTPUT "-3.0\t$bin_20\n";
+print OUTPUT "-2.9\t$bin_21\n";
+print OUTPUT "-2.8\t$bin_22\n";
+print OUTPUT "-2.7\t$bin_23\n";
+print OUTPUT "-2.6\t$bin_24\n";
+print OUTPUT "-2.5\t$bin_25\n";
+print OUTPUT "-2.4\t$bin_26\n";
+print OUTPUT "-2.3\t$bin_27\n";
+print OUTPUT "-2.2\t$bin_28\n";
+print OUTPUT "-2.1\t$bin_29\n";
+print OUTPUT "-2.0\t$bin_30\n";
+print OUTPUT "-1.9\t$bin_31\n";
+print OUTPUT "-1.8\t$bin_32\n";
+print OUTPUT "-1.7\t$bin_33\n";
+print OUTPUT "-1.6\t$bin_34\n";
+print OUTPUT "-1.5\t$bin_35\n";
+print OUTPUT "-1.4\t$bin_36\n";
+print OUTPUT "-1.3\t$bin_37\n";
+print OUTPUT "-1.2\t$bin_38\n";
+print OUTPUT "-1.1\t$bin_39\n";
+print OUTPUT "-1.0\t$bin_40\n";
+print OUTPUT "-0.9\t$bin_41\n";
+print OUTPUT "-0.8\t$bin_42\n";
+print OUTPUT "-0.7\t$bin_43\n";
+print OUTPUT "-0.6\t$bin_44\n";
+print OUTPUT "-0.5\t$bin_45\n";
+print OUTPUT "-0.4\t$bin_46\n";
+print OUTPUT "-0.3\t$bin_47\n";
+print OUTPUT "-0.2\t$bin_48\n";
+print OUTPUT "-0.1\t$bin_49\n";
+print OUTPUT "0.0\t$bin_50\n";
+print OUTPUT "0.1\t$bin_51\n";
+print OUTPUT "0.2\t$bin_52\n";
+print OUTPUT "0.3\t$bin_53\n";
+print OUTPUT "0.4\t$bin_54\n";
+print OUTPUT "0.5\t$bin_55\n";
+print OUTPUT "0.6\t$bin_56\n";
+print OUTPUT "0.7\t$bin_57\n";
+print OUTPUT "0.8\t$bin_58\n";
+print OUTPUT "0.9\t$bin_59\n";
+print OUTPUT "1.0\t$bin_60\n";
+print OUTPUT "1.1\t$bin_61\n";
+print OUTPUT "1.2\t$bin_62\n";
+print OUTPUT "1.3\t$bin_63\n";
+print OUTPUT "1.4\t$bin_64\n";
+print OUTPUT "1.5\t$bin_65\n";
+print OUTPUT "1.6\t$bin_66\n";
+print OUTPUT "1.7\t$bin_67\n";
+print OUTPUT "1.8\t$bin_68\n";
+print OUTPUT "1.9\t$bin_69\n";
+print OUTPUT "2.0\t$bin_70\n";
+print OUTPUT "2.1\t$bin_71\n";
+print OUTPUT "2.2\t$bin_72\n";
+print OUTPUT "2.3\t$bin_73\n";
+print OUTPUT "2.4\t$bin_74\n";
+print OUTPUT "2.5\t$bin_75\n";
+print OUTPUT "2.6\t$bin_76\n";
+print OUTPUT "2.7\t$bin_77\n";
+print OUTPUT "2.8\t$bin_78\n";
+print OUTPUT "2.9\t$bin_79\n";
+print OUTPUT "3.0\t$bin_80\n";
+print OUTPUT "3.1\t$bin_81\n";
+print OUTPUT "3.2\t$bin_82\n";
+print OUTPUT "3.3\t$bin_83\n";
+print OUTPUT "3.4\t$bin_84\n";
+print OUTPUT "3.5\t$bin_85\n";
+print OUTPUT "3.6\t$bin_86\n";
+print OUTPUT "3.7\t$bin_87\n";
+print OUTPUT "3.8\t$bin_88\n";
+print OUTPUT "3.9\t$bin_89\n";
+print OUTPUT "4.0\t$bin_90\n";
+print OUTPUT "4.1\t$bin_91\n";
+print OUTPUT "4.2\t$bin_92\n";
+print OUTPUT "4.3\t$bin_93\n";
+print OUTPUT "4.4\t$bin_94\n";
+print OUTPUT "4.5\t$bin_95\n";
+print OUTPUT "4.6\t$bin_96\n";
+print OUTPUT "4.7\t$bin_97\n";
+print OUTPUT "4.8\t$bin_98\n";
+print OUTPUT "4.9\t$bin_99\n";
+print OUTPUT "5.0\t$bin_100\n";
+print OUTPUT "\> 5\t$bin_low\n";
+
+my $duration = time - $start;
+
+unless (defined $quiet){
+    print "\nInput file (x): \"$fileX_fh\".\nInput file (y): \"$fileY_fh\".\n";
+    print "Output file: \"$output_fh\".\n";
+    print "Execution time: $duration s.\n";
+}
+
+
+sub bin_bucket{
+    my $log_val = $_[0];
+    if ($log_val <= -5) { $bin_low++ ;}
+    elsif ( $log_val > -5 && $log_val <= -4.9 ){ $bin_1++ ;}
+    elsif ( $log_val > -4.9 && $log_val <= -4.8 ){ $bin_2++ ;}
+    elsif ( $log_val > -4.8 && $log_val <= -4.7 ){ $bin_3++ ;}
+    elsif ( $log_val > -4.7 && $log_val <= -4.6 ){ $bin_4++ ;}
+    elsif ( $log_val > -4.6 && $log_val <= -4.5 ){ $bin_5++ ;}
+    elsif ( $log_val > -4.5 && $log_val <= -4.4 ){ $bin_6++ ;}
+    elsif ( $log_val > -4.4 && $log_val <= -4.3 ){ $bin_7++ ;}
+    elsif ( $log_val > -4.3 && $log_val <= -4.2 ){ $bin_8++ ;}
+    elsif ( $log_val > -4.2 && $log_val <= -4.1 ){ $bin_9++ ;}
+    elsif ( $log_val > -4.1 && $log_val <= -4.0 ){ $bin_10++ ;}
+    elsif ( $log_val > -4.0 && $log_val <= -3.9 ){ $bin_11++ ;}
+    elsif ( $log_val > -3.9 && $log_val <= -3.8 ){ $bin_12++ ;}
+    elsif ( $log_val > -3.8 && $log_val <= -3.7 ){ $bin_13++ ;}
+    elsif ( $log_val > -3.7 && $log_val <= -3.6 ){ $bin_14++ ;}
+    elsif ( $log_val > -3.6 && $log_val <= -3.5 ){ $bin_15++ ;}
+    elsif ( $log_val > -3.5 && $log_val <= -3.4 ){ $bin_16++ ;}
+    elsif ( $log_val > -3.4 && $log_val <= -3.3 ){ $bin_17++ ;}
+    elsif ( $log_val > -3.3 && $log_val <= -3.2 ){ $bin_18++ ;}
+    elsif ( $log_val > -3.2 && $log_val <= -3.1 ){ $bin_19++ ;}
+    elsif ( $log_val > -3.1 && $log_val <= -3.0 ){ $bin_20++ ;}
+    elsif ( $log_val > -3.0 && $log_val <= -2.9 ){ $bin_21++ ;}
+    elsif ( $log_val > -2.9 && $log_val <= -2.8 ){ $bin_22++ ;}
+    elsif ( $log_val > -2.8 && $log_val <= -2.7 ){ $bin_23++ ;}
+    elsif ( $log_val > -2.7 && $log_val <= -2.6 ){ $bin_24++ ;}
+    elsif ( $log_val > -2.6 && $log_val <= -2.5 ){ $bin_25++ ;}
+    elsif ( $log_val > -2.5 && $log_val <= -2.4 ){ $bin_26++ ;}
+    elsif ( $log_val > -2.4 && $log_val <= -2.3 ){ $bin_27++ ;}
+    elsif ( $log_val > -2.3 && $log_val <= -2.2 ){ $bin_28++ ;}
+    elsif ( $log_val > -2.2 && $log_val <= -2.1 ){ $bin_29++ ;}
+    elsif ( $log_val > -2.1 && $log_val <= -2.0 ){ $bin_30++ ;}
+    elsif ( $log_val > -2.0 && $log_val <= -1.9 ){ $bin_31++ ;}
+    elsif ( $log_val > -1.9 && $log_val <= -1.8 ){ $bin_32++ ;}
+    elsif ( $log_val > -1.8 && $log_val <= -1.7 ){ $bin_33++ ;}
+    elsif ( $log_val > -1.7 && $log_val <= -1.6 ){ $bin_34++ ;}
+    elsif ( $log_val > -1.6 && $log_val <= -1.5 ){ $bin_35++ ;}
+    elsif ( $log_val > -1.5 && $log_val <= -1.4 ){ $bin_36++ ;}
+    elsif ( $log_val > -1.4 && $log_val <= -1.3 ){ $bin_37++ ;}
+    elsif ( $log_val > -1.3 && $log_val <= -1.2 ){ $bin_38++ ;}
+    elsif ( $log_val > -1.2 && $log_val <= -1.1 ){ $bin_39++ ;}
+    elsif ( $log_val > -1.1 && $log_val <= -1.0 ){ $bin_40++ ;}
+    elsif ( $log_val > -1.0 && $log_val <= -0.9 ){ $bin_41++ ;}
+    elsif ( $log_val > -0.9 && $log_val <= -0.8 ){ $bin_42++ ;}
+    elsif ( $log_val > -0.8 && $log_val <= -0.7 ){ $bin_43++ ;}
+    elsif ( $log_val > -0.7 && $log_val <= -0.6 ){ $bin_44++ ;}
+    elsif ( $log_val > -0.6 && $log_val <= -0.5 ){ $bin_45++ ;}
+    elsif ( $log_val > -0.5 && $log_val <= -0.4 ){ $bin_46++ ;}
+    elsif ( $log_val > -0.4 && $log_val <= -0.3 ){ $bin_47++ ;}
+    elsif ( $log_val > -0.3 && $log_val <= -0.2 ){ $bin_48++ ;}
+    elsif ( $log_val > -0.2 && $log_val <= -0.1 ){ $bin_49++ ;}
+    elsif ( $log_val > -0.1 && $log_val <= 0.0 ){ $bin_50++ ;}
+    elsif ( $log_val > 0.0 && $log_val <= 0.1 ){ $bin_51++ ;}
+    elsif ( $log_val > 0.1 && $log_val <= 0.2 ){ $bin_52++ ;}
+    elsif ( $log_val > 0.2 && $log_val <= 0.3 ){ $bin_53++ ;}
+    elsif ( $log_val > 0.3 && $log_val <= 0.4 ){ $bin_54++ ;}
+    elsif ( $log_val > 0.4 && $log_val <= 0.5 ){ $bin_55++ ;}
+    elsif ( $log_val > 0.5 && $log_val <= 0.6 ){ $bin_56++ ;}
+    elsif ( $log_val > 0.6 && $log_val <= 0.7 ){ $bin_57++ ;}
+    elsif ( $log_val > 0.7 && $log_val <= 0.8 ){ $bin_58++ ;}
+    elsif ( $log_val > 0.8 && $log_val <= 0.9 ){ $bin_59++ ;}
+    elsif ( $log_val > 0.9 && $log_val <= 1.0 ){ $bin_60++ ;}
+    elsif ( $log_val > 1.0 && $log_val <= 1.1 ){ $bin_61++ ;}
+    elsif ( $log_val > 1.1 && $log_val <= 1.2 ){ $bin_62++ ;}
+    elsif ( $log_val > 1.2 && $log_val <= 1.3 ){ $bin_63++ ;}
+    elsif ( $log_val > 1.3 && $log_val <= 1.4 ){ $bin_64++ ;}
+    elsif ( $log_val > 1.4 && $log_val <= 1.5 ){ $bin_65++ ;}
+    elsif ( $log_val > 1.5 && $log_val <= 1.6 ){ $bin_66++ ;}
+    elsif ( $log_val > 1.6 && $log_val <= 1.7 ){ $bin_67++ ;}
+    elsif ( $log_val > 1.7 && $log_val <= 1.8 ){ $bin_68++ ;}
+    elsif ( $log_val > 1.8 && $log_val <= 1.9 ){ $bin_69++ ;}
+    elsif ( $log_val > 1.9 && $log_val <= 2.0 ){ $bin_70++ ;}
+    elsif ( $log_val > 2.0 && $log_val <= 2.1 ){ $bin_71++ ;}
+    elsif ( $log_val > 2.1 && $log_val <= 2.2 ){ $bin_72++ ;}
+    elsif ( $log_val > 2.2 && $log_val <= 2.3 ){ $bin_73++ ;}
+    elsif ( $log_val > 2.3 && $log_val <= 2.4 ){ $bin_74++ ;}
+    elsif ( $log_val > 2.4 && $log_val <= 2.5 ){ $bin_75++ ;}
+    elsif ( $log_val > 2.5 && $log_val <= 2.6 ){ $bin_76++ ;}
+    elsif ( $log_val > 2.6 && $log_val <= 2.7 ){ $bin_77++ ;}
+    elsif ( $log_val > 2.7 && $log_val <= 2.8 ){ $bin_78++ ;}
+    elsif ( $log_val > 2.8 && $log_val <= 2.9 ){ $bin_79++ ;}
+    elsif ( $log_val > 2.9 && $log_val <= 3.0 ){ $bin_80++ ;}
+    elsif ( $log_val > 3.0 && $log_val <= 3.1 ){ $bin_81++ ;}
+    elsif ( $log_val > 3.1 && $log_val <= 3.2 ){ $bin_82++ ;}
+    elsif ( $log_val > 3.2 && $log_val <= 3.3 ){ $bin_83++ ;}
+    elsif ( $log_val > 3.3 && $log_val <= 3.4 ){ $bin_84++ ;}
+    elsif ( $log_val > 3.4 && $log_val <= 3.5 ){ $bin_85++ ;}
+    elsif ( $log_val > 3.5 && $log_val <= 3.6 ){ $bin_86++ ;}
+    elsif ( $log_val > 3.6 && $log_val <= 3.7 ){ $bin_87++ ;}
+    elsif ( $log_val > 3.7 && $log_val <= 3.8 ){ $bin_88++ ;}
+    elsif ( $log_val > 3.8 && $log_val <= 3.9 ){ $bin_89++ ;}
+    elsif ( $log_val > 3.9 && $log_val <= 4.0 ){ $bin_90++ ;}
+    elsif ( $log_val > 4.0 && $log_val <= 4.1 ){ $bin_91++ ;}
+    elsif ( $log_val > 4.1 && $log_val <= 4.2 ){ $bin_92++ ;}
+    elsif ( $log_val > 4.2 && $log_val <= 4.3 ){ $bin_93++ ;}
+    elsif ( $log_val > 4.3 && $log_val <= 4.4 ){ $bin_94++ ;}
+    elsif ( $log_val > 4.4 && $log_val <= 4.5 ){ $bin_95++ ;}
+    elsif ( $log_val > 4.5 && $log_val <= 4.6 ){ $bin_96++ ;}
+    elsif ( $log_val > 4.6 && $log_val <= 4.7 ){ $bin_97++ ;}
+    elsif ( $log_val > 4.7 && $log_val <= 4.8 ){ $bin_98++ ;}
+    elsif ( $log_val > 4.8 && $log_val <= 4.9 ){ $bin_99++ ;}
+    elsif ( $log_val > 4.9 && $log_val <= 5.0 ){ $bin_100++ ;}
+    elsif (	$log_val > 5) { $bin_high++ ;}
+}

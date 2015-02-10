@@ -1,0 +1,441 @@
+#!/usr/bin/env perl
+
+## Last Modified January 19th, 2015 22:24 CST
+
+## Citation:
+## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
+## "FASTAptamer: A Bioinformatic Toolkit for High-Throughput Sequence Analysis of 
+## Combinatorial Selections." Molecular Therapy — Nucleic Acids. 2015.
+## DOI: 10.1038/mtna.2015.4
+
+## Distributed under GNU General Public License v3
+
+use Getopt::Long;    ## Core Perl module for command line arguments/options
+
+###################################################
+## File Input/Output and command line variables   #
+###################################################
+
+my $fileX_fh;    ## Variable for input file X
+my $fileY_fh;    ## Variable for input file Y	
+my $fileZ_fh;    ## Variable for input file Z
+my $output_fh;   ## Variable for output file
+my $help;        ## true/false variable for help screen
+my $all;         ## true/false variable to print only matched sequences
+my $quiet;       ## true/false variable to supress standard output
+my $filter;      ## Variable for reads per million threshold filter
+my $version;     ## true/false variable for version screen
+
+                                            ## Takes command line input for...
+GetOptions (    "x=s" => \$fileX_fh,        ## ... input file x
+                "y=s" => \$fileY_fh,        ## ... input file y
+                "z=s" => \$fileZ_fh,        ## ... input file z
+                "output=s" => \$output_fh,  ## ... output file
+                "help" => \$help,           ## ... help screen
+                "filter=f" => \$filter,     ## ... RPM threshold filter
+                "version" => \$version,     ## ... display version
+                "quiet" => \$quiet);        ## ... supress standard output
+
+if (defined $help){    ## Prints help screen
+    print <<"HELP";
+	
+--------------------------------------------------------------------------------
+                               FASTAptamer-Enrich
+--------------------------------------------------------------------------------
+
+Usage: fastaptamer_enrich [-h] [-x INFILE] [-y INFILE] [-z INFILE] [-o OUTFILE] 
+                          [-f #] [-q] [-v]
+
+    [-h]            = Help screen.
+    [-x INFILE]     = First input file from FASTAptamer-Count or 
+                      FASTAptamer-Cluster. REQUIRED.
+    [-y INFILE]     = Second input file from FASTAptamer-Count or 
+                      FASTAptamer-Cluster. REQUIRED. 
+                      *** For two populations only, use -x and -y. ***
+    [-z INFILE]     = Optional third input file from FASTAptamer-Count or 
+    				  FASTAptamer-Cluster.
+    [-o OUTFILE]    = Plain text output file with tab separated values. REQUIRED
+    [-f]            = Optional reads per million threshold filter.  
+    [-q]            = Quiet mode.  Suppresses standard output of file I/O, 
+                      number of matched sequences and execution time.
+    [-v]            = Display version.
+
+FASTAptamer-Enrich rapidly calculates fold-enrichment values for each sequence
+across two or three input files.  Output is provided as a tab-delimited plain t-
+ext file and is formatted to include sequence composition, length, rank, reads, 
+reads per million (RPM), and enrichment values for each sequence. If any files 
+from FASTAptamer-Cluster are provided, output will include cluster information 
+for that population. A threshold filter can be applied to exclude sequences with
+total reads per million (across all input populations) less than the number ent-
+ered after the [-f] option.  Default behavior is to include all sequences. Enri-
+chment is calculated by dividing reads per million of y/x (and z/y and z/x, if a 
+third input file is specified).
+
+Input for FASTAptamer-Enrich MUST come from FASTAptamer-Count or FASTAptamer-
+Cluster output files.
+
+HELP
+exit;
+}
+
+if (defined $version){                     ## Print version screen if -v is true
+    print <<"VERSION";
+	
+FASTAptamer v1.0.2
+	
+VERSION
+exit;
+}
+
+######################################
+## Open input files and output files #
+######################################
+
+open (FILE_X, '<', $fileX_fh) or die
+"\nCould not open input file x, or no input file was specified.\n
+See help documentation [-h], README, or User's Guide for program usage.\n";	
+	
+open (FILE_Y, '<', $fileY_fh) or die
+"\nCould not open input file y, or no input file was specified.\n
+See help documentation [-h], README, or User's Guide for program usage.\n";
+	
+if (defined $fileZ_fh){
+    open (FILE_Z, '<', $fileZ_fh) or die "\nCould not open input file z, or no input file was specified.\n
+    See help documentation [-h], README, or User's Guide for program usage.\n";
+}
+	
+open (OUTPUT, '>', $output_fh) or die
+"\nCould not open output file or no output file was specified.\n
+See help documentation [-h], README, or User's Guide for program usage.\n";		
+
+######################
+## Other variables   #
+######################
+
+$/ = ">";       ## Sets default record separator to > instead of \n
+
+my $start = time;      ## Record start of run-time
+
+my %hash_x;            ## variable for initial input file hash
+my %hash_y;            ## variable for middle input file hash
+my %hash_z;            ## variable for final input file hash
+
+my $entries_x;  ## number of unique sequences in initial input file
+my $entries_y;  ## number of unique sequences in middle input file
+my $entries_z;  ## number of unique sequences in final input file
+
+my $clusters_in_x;  ## True/false variable for clustered file input
+my $clusters_in_y;  ## True/false variable for clustered file input
+my $clusters_in_z;  ## True/false variable for clustered file input
+
+####################################################################
+## Three loops to take input file data and create x, y, and Z hash #
+####################################################################
+
+if (defined $fileZ_fh){
+    while (<FILE_Z>){
+         if ($_ =~ /(\d+-\d+-\d+\.?\d*-\d+-\d+-\d+)\n(\S+)/){			
+            my $rank_and_read = $1;
+            my $sequence = $2;
+            $hash_z{$sequence} = $rank_and_read;
+            $entries_z++;
+            $clusters_in_z = 1;  ## Clustered file 
+        }
+        
+        elsif ($_ =~ /(\d+-\d+-\d+\.?\d*)\n(\S+)/){			
+            my $rank_and_read = $1;
+            my $sequence = $2;
+            $hash_z{$sequence} = $rank_and_read;
+            $entries_z++;
+        }
+       
+    }
+}
+
+close FILE_Z if defined $fileZ_fh;
+
+while (<FILE_Y>){
+    if ($_ =~ /(\d+-\d+-\d+\.?\d*-\d+-\d+-\d+)\n(\S+)/){			
+        my $rank_and_read = $1;
+        my $sequence = $2;
+        $hash_y{$sequence} = $rank_and_read;
+        $entries_y++;
+        $clusters_in_y = 1;  ## Clustered file 
+    }
+    
+    elsif ($_ =~ /(\d+-\d+-\d+\.?\d*)\n(\S+)/){			
+        my $rank_and_read = $1;
+        my $sequence = $2;
+        $hash_y{$sequence} = $rank_and_read;
+        $entries_y++;
+    }
+    
+}
+
+close FILE_Y;
+
+while (<FILE_X>){
+    if ($_ =~ /(\d+-\d+-\d+\.?\d*-\d+-\d+-\d+)\n(\S+)/){			
+        my $rank_and_read = $1;
+        my $sequence = $2;
+        $hash_x{$sequence} = $rank_and_read;
+        $entries_x++;
+        $clusters_in_x = 1;  ## Clustered file 
+    }
+    
+    elsif ($_ =~ /(\d+-\d+-\d+\.?\d*)\n(\S+)/){			
+        my $rank_and_read = $1;
+        my $sequence = $2;
+        $hash_x{$sequence} = $rank_and_read;
+        $entries_x++;
+    }
+    
+}
+
+close FILE_X;
+
+unless (defined $quiet){
+    print "\n$entries_x sequences in \"$fileX_fh\".\n";
+    print "$entries_y sequences in \"$fileY_fh\".\n";
+    print "$entries_z sequences in \"$fileZ_fh\".\n\n" if defined $fileZ_fh;
+}
+
+################################################################################
+## The section below creates the headers for the output file by testing which  #
+## files were clustered and printing accordingly.                              #
+################################################################################
+
+
+if (defined $fileZ_fh){
+    print OUTPUT "Sequence\tLength\tRank (x)\tReads (x)\tRPM (x)\t";
+    if (defined $clusters_in_x){
+        print OUTPUT "Cluster (x)\tRank in Cluster (x)\tEdit Distance (x)\t";
+    }
+    print OUTPUT "Rank (y)\tReads (y)\tRPM (y)\t";
+    if (defined $clusters_in_y){
+        print OUTPUT "Cluster (y)\tRank in Cluster (y)\tEdit Distance (y)\t";
+    }    
+    print OUTPUT "Rank (z)\tReads (z)\tRPM (z)\t";
+    if (defined $clusters_in_z){
+        print OUTPUT "Cluster (z)\tRank in Cluster (z)\tEdit Distance (z)\t";
+    }    
+    print OUTPUT "Enrichment (y/x)\tEnrichment (z/y)\tEnrichment (z/x)\n";
+}
+else {
+    print OUTPUT "Sequence\tLength\tRank (x)\tReads (x)\tRPM (x)\t";
+    if (defined $clusters_in_x){
+        print OUTPUT "Cluster (x)\tRank in Cluster (x)\tEdit Distance (x)\t";
+    }    
+    print OUTPUT "Rank (y)\tReads (y)\tRPM (y)\t";
+    if (defined $clusters_in_y){
+        print OUTPUT "Cluster (y)\tRank in Cluster (y)\tEdit Distance (y)\t";
+    }    
+    print OUTPUT "Enrichment (y/x)\n";
+}
+
+################################################################################
+## The next few blocks simply find sequence matches across hashes by testing   #
+## to see if the "key" or sequence exists in the prior hash.  If it does exist #
+## then the key and value pair for the hash are deleted.  It starts with the   #
+## Z hash to test for keys in Y then X, and then moves to the Y hash to test   #
+## for keys left over in X.                                                    #
+################################################################################
+
+if (defined $fileZ_fh){
+    for my $sequence_in_z (keys %hash_z){     
+## Iterate through all sequences in hash z
+        my $z_match = $hash_z{$sequence_in_z};    
+## For sequence key, find corresponding values & store in a new scoped variable
+        delete $hash_z{$sequence_in_z};           
+## Remove key:value pair from hash
+        my @z_match_split = split /-/, $z_match;  
+## Split value into rank, reads and RPM... then place into array
+        my $seq_length = length $sequence_in_z;
+        my $z_rpm = $z_match_split[2];
+        my $y_rpm;
+        my $x_rpm;
+        my $total_rpm;
+        my $x_match;
+        my @x_match_split;
+        my $y_match;
+        my @y_match_split;
+		
+###############	
+        if ($hash_x{$sequence_in_z}){    
+## If sequence key returns a value in the x hash
+            $x_match = $hash_x{$sequence_in_z};    
+## ...find corresponding value and store in a new scoped variable
+            delete $hash_x{$sequence_in_z};          
+## ...remove key:value pair from hash	
+            @x_match_split = split /-/, $x_match;    
+## ...split value into rank and reads, place into scoped array
+            $x_rpm = $x_match_split[2];
+        }
+###############
+        if ($hash_y{$sequence_in_z}){    
+## If sequence key returns a value in the y hash
+            $y_match = $hash_y{$sequence_in_z};    
+## ...find corresponding value and store in a new scoped variable
+            delete $hash_y{$sequence_in_z};           
+## ...remove key:value pair from hash
+            @y_match_split = split /-/, $y_match;  
+## ...split value into rank and reads, place into array
+            $y_rpm = $y_match_split[2];
+        }
+###############	       
+        $total_rpm = $x_rpm + $y_rpm + $z_rpm;
+        
+        if ($total_rpm >= $filter){  ## If filter is defined, print only if total RPM is greater
+        	print OUTPUT "$sequence_in_z\t$seq_length\t";
+        	
+            if (defined $x_match){
+            	print OUTPUT "$x_match_split[0]\t$x_match_split[1]\t$x_match_split[2]\t";    
+        			if (defined $clusters_in_x){
+        				print OUTPUT "$x_match_split[3]\t$x_match_split[4]\t$x_match_split[5]\t";
+        			}
+        	}
+        	else {
+        		print OUTPUT "\t\t\t";
+        		if (defined $clusters_in_x){
+        				print OUTPUT "\t\t\t";
+        		}
+        	}
+
+			 if (defined $y_match){
+            	print OUTPUT "$y_match_split[0]\t$y_match_split[1]\t$y_match_split[2]\t";    
+        			if (defined $clusters_in_y){
+        				print OUTPUT "$y_match_split[3]\t$y_match_split[4]\t$y_match_split[5]\t";
+        			}
+        	}
+        	else {
+        		print OUTPUT "\t\t\t";
+        		if (defined $clusters_in_y){
+        				print OUTPUT "\t\t\t";
+        		}
+        	}
+        	
+        	print OUTPUT "$z_match_split[0]\t$z_match_split[1]\t$z_match_split[2]\t";
+        	if (defined $clusters_in_z){
+        		print OUTPUT "$z_match_split[3]\t$z_match_split[4]\t$z_match_split[5]\t";
+        	}
+			
+        	if (defined $y_rpm && defined $x_rpm){
+        	    print OUTPUT $y_rpm / $x_rpm . "\t";
+        	}
+        	else {
+        	    print OUTPUT "\t";
+        	}
+		
+        	if (defined $y_rpm){
+        	    print OUTPUT $z_rpm / $y_rpm . "\t";
+        	}
+        	else {
+        	    print OUTPUT "\t";
+        	}
+        	if (defined $x_rpm){
+        	    print OUTPUT $z_rpm / $x_rpm . "\n";
+        	}
+        	else {
+        	    print OUTPUT "\n";
+        	}		
+    	}
+	}
+}
+################################################################################
+for my $sequence_in_y (keys %hash_y){    
+## Iterate through seqs in y hash (should only contain seqs NOT found in z hash)
+	
+    my $y_match = $hash_y{$sequence_in_y};    
+## Using sequence key, find corresponding value and store in scoped variable
+    delete $hash_y{$sequence_in_y};           
+## Remove the sequence key:value pair from hash
+    my @y_match_split = split /-/, $y_match;  
+## Split value into rank and reads, store in scoped array
+    my $seq_length = length $sequence_in_y;
+    my $y_rpm = $y_match_split[2];
+    my $x_rpm;
+    my $total_rpm;
+    my $x_match;
+    my @x_match_split;
+		
+    if ($hash_x{$sequence_in_y}){                
+## If sequence key exists for the x hash
+        $x_match = $hash_x{$sequence_in_y};   
+## ...find corresponding value and store in scoped variable
+        delete $hash_x{$sequence_in_y};          
+## ...remove key:value pair from hash
+        @x_match_split = split /-/, $x_match; 
+## ...split value into rank and reads, store in scoped array
+        $x_rpm = $x_match_split[2];
+    }
+	
+	$total_rpm = $x_rpm + $y_rpm;
+        
+    if ($total_rpm >= $filter){
+        print OUTPUT "$sequence_in_y\t$seq_length\t";
+        	
+        if (defined $x_match){
+            print OUTPUT "$x_match_split[0]\t$x_match_split[1]\t$x_match_split[2]\t";    
+        		if (defined $clusters_in_x){
+        			print OUTPUT "$x_match_split[3]\t$x_match_split[4]\t$x_match_split[5]\t";
+        		}
+        }
+        else {
+        	print OUTPUT "\t\t\t";
+        	if (defined $clusters_in_x){
+        			print OUTPUT "\t\t\t";
+        	}
+        }
+        
+        print OUTPUT "$y_match_split[0]\t$y_match_split[1]\t$y_match_split[2]\t";
+        if (defined $clusters_in_y){
+        		print OUTPUT "$y_match_split[3]\t$y_match_split[4]\t$y_match_split[5]\t";
+        }
+        
+        if (defined $x_rpm){
+        	print OUTPUT "\t\t\t" if defined $fileZ_fh;
+        	print OUTPUT "\t\t\t" if defined $clusters_in_z;
+        	print OUTPUT $y_rpm / $x_rpm . "\n";
+    	}
+    	else {
+        	print OUTPUT "\n";
+    	}
+        
+    }
+}
+################################################################################
+for my $unmatched_x_sequence (keys %hash_x){    
+## Iterate through all sequences present only in the initial population
+	
+    my $x_match = $hash_x{$unmatched_x_sequence}; 
+## Use sequence key to find corresponding value, assign to 
+    delete $hash_x{$unmatched_x_sequence};        
+## Remove sequence key:value pair from hash
+    my @x_match_split = split /-/, $x_match;      
+## Split value into rank and reads, store in scoped array
+    my $seq_length = length $unmatched_x_sequence;
+    my $x_rpm = $x_match_split[2];							
+    if ($x_rpm >= $filter){
+    	print OUTPUT "$unmatched_x_sequence\t$seq_length\t$x_match_split[0]\t$x_match_split[1]\t$x_match_split[2]";
+    	if (defined $clusters_in_x){
+        	print OUTPUT "\t$x_match_split[3]\t$x_match_split[4]\t$x_match_split[5]\n";
+        }
+        else {
+        	print OUTPUT "\n";
+        }
+	}
+}
+################################################################################
+
+close OUTPUT;
+
+my $duration = time - $start;
+
+unless (defined $quiet){
+    print "Input file (x): \"$fileX_fh\".\nInput file (y): \"$fileY_fh\".\n";
+    print "Input file (z): \"$fileZ_fh\".\n" if defined $fileZ_fh;
+    print "Output file: \"$output_fh\".\n";
+    print "Execution time: $duration s.\n";
+}
+
+exit;
