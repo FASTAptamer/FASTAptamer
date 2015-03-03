@@ -80,7 +80,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.2
+FASTAptamer v1.0.3
 	
 VERSION
 exit;
