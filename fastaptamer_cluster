@@ -130,7 +130,9 @@ unless ($quiet){  ## Unless -q option is invoked, print this warning and summary
     print "Please be patient as clustering can take several\n";
     print "hours for a single file.  For faster clustering\n";
     print "use the read filter [-f] to avoid clustering of \n";
-    print "sequences not highly sampled.\n";
+    print "sequences not highly sampled and/or use the max \n";
+    print "clusters option [-c] to limit clustering to the \n";
+    print "number of clusters that you are interested in. \n";
     print "**************************************************";
     print "\n\nTotal number of sequences to cluster: $entries.\n";
     print "\nCluster\tUnique Sequences\tReads\tRPM\n";
