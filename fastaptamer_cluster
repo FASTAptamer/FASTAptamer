@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-## Last Modified January 19th, 2015 22:03 CST
+## Last Modified March 3rd, 2015 6:30 CST by Christopher Bottoms
 
 ## Citation:
 ## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
@@ -20,6 +20,7 @@ my $defined_edit_distance;  ## Variable (integer) for user-defined edit distance
 my $help;                   ## true/false variable for help screen
 my $quiet;                  ## true/false to suppress standard output
 my $filter = 0;				## Variable to define a read filter for entries
+my $max_clusters = 9999999999999999; ## Maximum number of clusters
 my $version;                ## true/false variable for version screen
 
                                            ## Take command line arguments for...
@@ -27,6 +28,7 @@ GetOptions (    "infile=s" => \$infile,    ## ... input file
                 "outfile=s" => \$outfile,  ## ... output file
                 "distance=i" => \$defined_edit_distance,  ## ... edit distance
                 "filter=f" => \$filter,    ## ... read filter
+                "cluster_max=i" => \$max_clusters, ## max number of clusters
                 "help" => \$help,          ## ... help screen
                 "version" => \$version,    ## ... version screen
                 "quiet" => \$quiet);       ## ... supress standard output
@@ -46,6 +48,7 @@ Usage: fastaptamer_cluster [-h] [-i INFILE] [-o OUTFILE] [-d #] [-f #] [-q] [-v]
     [-d]            = Edit distance for clustering sequences. REQUIRED.
     [-f]            = Read filter. Only sequences with total reads greater than
                       the value supplied will be clustered.
+    [-c]            = Maximum number of clusters to find.
     [-q]            = Quiet mode.  Suppresses standard output of file I/O, numb-
                       er of clusters, cluster size and execution time.
     [-v]            = Display version.
@@ -67,7 +70,8 @@ Input for FASTAptamer-Cluster MUST come from a FASTAptamer-Count output file.
 
 PLEASE NOTE: This is a computationally intense program that can take multiple h-
 ours to finish depending on the size and complexity of your population. Utilize
-the read filter [-f] to improve execution time. 
+the read filter [-f] and/or the maximum number of clusters [-c] to improve ex-
+ecution time. 
 
 HELP
 exit;
@@ -76,7 +80,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.2
+FASTAptamer v1.0.3
 	
 VERSION
 exit;
@@ -126,7 +130,9 @@ unless ($quiet){  ## Unless -q option is invoked, print this warning and summary
     print "Please be patient as clustering can take several\n";
     print "hours for a single file.  For faster clustering\n";
     print "use the read filter [-f] to avoid clustering of \n";
-    print "sequences not highly sampled.\n";
+    print "sequences not highly sampled and/or use the max \n";
+    print "clusters option [-c] to limit clustering to the \n";
+    print "number of clusters that you are interested in. \n";
     print "**************************************************";
     print "\n\nTotal number of sequences to cluster: $entries.\n";
     print "\nCluster\tUnique Sequences\tReads\tRPM\n";
@@ -179,6 +185,9 @@ sub iterate {
     unless ($quiet) { print "$current_cluster\t$cluster_rank\t$current_cluster_reads\t$current_cluster_rpm\n"; }
     ## Display cluster number, number of unique sequences, reads and RPM
     $current_cluster++; ## Increment cluster number prior to next cluster
+
+    # Quit clustering if the maximum clusters have been found
+    return if $current_cluster > $max_clusters;
 
     if (@keepers) { ## Subroutine within subroutine for sequences that are unclustered
         iterate(@keepers);
