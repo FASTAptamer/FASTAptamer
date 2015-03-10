@@ -149,12 +149,12 @@ while( $iterator->() ) {1} ## Simply repeat until iterator runs out (i.e.
 ###############################################
 
 sub get_cluster_iterator {
-    my @entries = @_;
+    my @remaining_sequences = @_;
 
     my $current_cluster = 1;  ## This variable defines what cluster we're working on 
 
     return sub {
-        my ( $top_entry, @remaining ) = @entries; ## Takes "seed sequence" and remaining entries
+        my ( $top_entry, @entires ) = @remaining_sequences; ## Takes "seed sequence" and remaining entries
 
         # Return false value if no more entries left
         return if ! $top_entry;
@@ -171,7 +171,7 @@ sub get_cluster_iterator {
         my $current_cluster_reads = $current_seq_metrics[1]; ## Take reads to tally cluster size
         my $current_cluster_rpm = $current_seq_metrics[2]; ## Take RPM to tally cluster size in RPM
 
-        for (@remaining) { ## for each entry left in array send to calculate distance
+        for (@entires) { ## for each entry left in array send to calculate distance
             my @comparison_seq_info = split /\n/, $_; ## Split entry into metrics and sequence
             my @comparison_seq_metrics = split /-/, $comparison_seq_info[0]; ## Split identifier line
             my $comparison_seq_reads = $comparison_seq_metrics[1]; ## Take reads to tally cluster size
@@ -197,11 +197,8 @@ sub get_cluster_iterator {
         # Quit clustering if the maximum clusters have been found
         return if $current_cluster > $max_clusters;
 
-        # Delete old array
-        @entries = undef;
-
-        # Replace array with the ones to use next time
-        @entries = @keepers;
+        # Store unclustered sequences for use in next iteration
+        @remaining_sequences = @keepers;
 
         # Sucessful iteration, so returning a true value
         return 1;
