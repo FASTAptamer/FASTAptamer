@@ -1,3 +1,4 @@
+package test;
 use 5.008;    # Require at least Perl version 5.8
 use strict;   # Must declare all variables before using them
 use warnings; # Emit helpful warnings
@@ -5,7 +6,6 @@ use autodie;  # Fatal exceptions for common unrecoverable errors (e.g. w/open)
 
 # Testing-related modules
 use Test::More;                  # provide testing functions (e.g. is, like)
-use Test::LongString;            # Compare strings byte by byte
 use Data::Section -setup;        # Set up labeled DATA sections
 use Path::Tiny;
 
@@ -20,43 +20,14 @@ use Path::Tiny;
 
 done_testing();
 
-sub sref_from {
-    my $section = shift;
-
-    #Scalar reference to the section text
-    return __PACKAGE__->section_data($section);
-}
-
 sub string_from {
     my $section = shift;
 
-    #Get the scalar reference
-    my $sref = sref_from($section);
+    #Get the scalar reference to the section text
+    my $sref = test->section_data($section);
 
     #Return a string containing the entire section
     return ${$sref};
-}
-
-sub fh_from {
-    my $section = shift;
-    my $sref    = sref_from($section);
-
-    #Create filehandle to the referenced scalar
-    open( my $fh, '<', $sref );
-    return $fh;
-}
-
-sub assign_filename_for {
-    my $filename = shift;
-    my $section  = shift;
-
-    # Don't overwrite existing file
-    die "'$filename' already exists." if -e $filename;
-
-    my $string   = string_from($section);
-    path($filename)->spew($string);
-
-    return;
 }
 
 sub filename_for {
@@ -68,18 +39,6 @@ sub filename_for {
 
     return $tempfile;
 }
-
-sub delete_temp_file {
-    my $filename  = shift;
-    my $delete_ok = unlink $filename;
-    ok($delete_ok, "deleted temp file '$filename'");
-}
-
-#------------------------------------------------------------------------
-# IMPORTANT!
-#
-# Each line from each section automatically ends with a newline character
-#------------------------------------------------------------------------
 
 __DATA__
 __[ input ]__
