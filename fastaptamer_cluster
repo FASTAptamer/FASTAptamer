@@ -165,27 +165,27 @@ sub get_cluster_iterator {
         print OUTPUT ">$current_seq_info[0]-$current_cluster-$cluster_rank-0\n$current_seq_info[1]\n";
         ## Prints current seed sequence in FASTAptamer-Cluster format
 
-           my @current_seq_metrics = split /-/, $current_seq_info[0]; ## Split sequence identifier line
-           my $current_cluster_reads = $current_seq_metrics[1]; ## Take reads to tally cluster size
-           my $current_cluster_rpm = $current_seq_metrics[2]; ## Take RPM to tally cluster size in RPM
+        my @current_seq_metrics = split /-/, $current_seq_info[0]; ## Split sequence identifier line
+        my $current_cluster_reads = $current_seq_metrics[1]; ## Take reads to tally cluster size
+        my $current_cluster_rpm = $current_seq_metrics[2]; ## Take RPM to tally cluster size in RPM
 
         for (@entires) { ## for each entry left in array send to calculate distance
             my @comparison_seq_info = split /\n/, $_; ## Split entry into metrics and sequence
             my @comparison_seq_metrics = split /-/, $comparison_seq_info[0]; ## Split identifier line
             my $comparison_seq_reads = $comparison_seq_metrics[1]; ## Take reads to tally cluster size
             my $comparison_seq_rpm = $comparison_seq_metrics[2]; ## Take RPM to tally cluster size
-             my $distance = levenshtein( $current_seq_info[1], $comparison_seq_info[1] );
-             ## sends comparison sequence to compare against current seed sequence, returns distances
-             if ( $distance > $defined_edit_distance ) { ## If distance is greater than defined
-                 push @keepers, $_; ## Add to array for comparison in next iteration
-             }
-             elsif ( $distance <= $defined_edit_distance ) { ## If distance is less than or equal to defined
-                 $cluster_rank++; ## Increment the cluster rank
-                 $current_cluster_reads += $comparison_seq_reads; ## Add reads to cluster reads tally
-                 $current_cluster_rpm += $comparison_seq_rpm; ## Add RPM to cluster RPM tally
-                 print OUTPUT ">$comparison_seq_info[0]-$current_cluster-$cluster_rank-$distance\n";
-                 print OUTPUT "$comparison_seq_info[1]\n"; ## Print entry in output file
-             }
+            my $distance = levenshtein( $current_seq_info[1], $comparison_seq_info[1] );
+            ## sends comparison sequence to compare against current seed sequence, returns distances
+            if ( $distance > $defined_edit_distance ) { ## If distance is greater than defined
+                push @keepers, $_; ## Add to array for comparison in next iteration
+            }
+            elsif ( $distance <= $defined_edit_distance ) { ## If distance is less than or equal to defined
+                $cluster_rank++; ## Increment the cluster rank
+                $current_cluster_reads += $comparison_seq_reads; ## Add reads to cluster reads tally
+                $current_cluster_rpm += $comparison_seq_rpm; ## Add RPM to cluster RPM tally
+                print OUTPUT ">$comparison_seq_info[0]-$current_cluster-$cluster_rank-$distance\n";
+                print OUTPUT "$comparison_seq_info[1]\n"; ## Print entry in output file
+            }
         }
 
         unless ($quiet) { print "$current_cluster\t$cluster_rank\t$current_cluster_reads\t$current_cluster_rpm\n"; }
