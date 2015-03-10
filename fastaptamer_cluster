@@ -138,6 +138,8 @@ unless ($quiet){  ## Unless -q option is invoked, print this warning and summary
     print "\nCluster\tUnique Sequences\tReads\tRPM\n";
 }
 
+my $current_cluster = 1;  ## This variable defines what cluster we're working on 
+
 my $iterator = get_cluster_iterator(@sequence_and_info);
 
 while( $iterator->() ) {1} ## Simply repeat until iterator runs out (i.e. 
@@ -150,8 +152,6 @@ while( $iterator->() ) {1} ## Simply repeat until iterator runs out (i.e.
 
 sub get_cluster_iterator {
     my @remaining_sequences = @_;
-
-    my $current_cluster = 1;  ## This variable defines what cluster we're working on 
 
     return sub {
         my ( $top_entry, @entires ) = @remaining_sequences; ## Takes "seed sequence" and remaining entries
