@@ -155,21 +155,19 @@ sub get_cluster_iterator {
 
     return sub {
         my ( $top_entry, @entires ) = @remaining_sequences; ## Takes "seed sequence" and remaining entries
-
-        # Return false value if no more entries left
-        return if ! $top_entry;
-
+        return if ! $top_entry; ## Return false value if no more entries left
         my @keepers; ## Array to store unclustered entries
         my @current_seq_info = split /\n/, $top_entry;
         ## Splits entry into metrics (reads, rank, RPM) and the "seed" sequence
+
         my $cluster_rank = 1; ## Defines that seed sequence is ranked #1 in its cluster
 
         print OUTPUT ">$current_seq_info[0]-$current_cluster-$cluster_rank-0\n$current_seq_info[1]\n";
         ## Prints current seed sequence in FASTAptamer-Cluster format
 
-        my @current_seq_metrics = split /-/, $current_seq_info[0]; ## Split sequence identifier line
-        my $current_cluster_reads = $current_seq_metrics[1]; ## Take reads to tally cluster size
-        my $current_cluster_rpm = $current_seq_metrics[2]; ## Take RPM to tally cluster size in RPM
+           my @current_seq_metrics = split /-/, $current_seq_info[0]; ## Split sequence identifier line
+           my $current_cluster_reads = $current_seq_metrics[1]; ## Take reads to tally cluster size
+           my $current_cluster_rpm = $current_seq_metrics[2]; ## Take RPM to tally cluster size in RPM
 
         for (@entires) { ## for each entry left in array send to calculate distance
             my @comparison_seq_info = split /\n/, $_; ## Split entry into metrics and sequence
