@@ -1,4 +1,4 @@
-ÿþ--------------------------------------------------------------------------------  
+--------------------------------------------------------------------------------  
  
 FASTAptamer v1.0.5
 
@@ -343,4 +343,3 @@ http://github.com/FASTAptamer/FASTAptamer
 
 Funding for this work was provided by NSF [CHE-1057506] (Chemistry of Life Proc-
 esses) & NASA [NAG5-12360] (NASA Exobiology Program).
-
