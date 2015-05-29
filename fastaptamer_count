@@ -60,7 +60,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.4
+FASTAptamer v1.0.5
 	
 VERSION
 exit;
@@ -91,18 +91,20 @@ my %sequence_reads;
 
 my $entries = 0;    ## Counts the number of entries processed
 
-$/ = "@"; ## Change default input record separator to read FASTQ formatted file	
-
 ################################################################################
 ## Read input file and for each entry, add sequence or increment value in hash #
 ################################################################################
 
 while (<INPUT>){
-    if ($_ =~ /.+\n(\S+)\n.+\n.+/){
-        my $sequence = $1;
-        $sequence_reads{$sequence} += 1;
-        $entries++;
-    }
+    my $sequence    = <INPUT>;
+    my $qual_header = <INPUT>;
+    my $qual_scores = <INPUT>;
+
+    warn "Record for $_ malformed" unless $qual_scores;
+
+    chomp $sequence;
+    $sequence_reads{$sequence} += 1;
+    $entries++;
 }
 
 close INPUT;
