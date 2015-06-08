@@ -80,7 +80,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.4
+FASTAptamer v1.0.6
 	
 VERSION
 exit;
@@ -113,7 +113,7 @@ my $entries;             ## Variable to keep track of the number of entries
 $/= ">";   ## Change default input record separator to read FASTA formatted file
 
 while (<INPUT>){                             ## Reads through entire input file
-    if ($_ =~ /(\d+-\d+-\d+.*\d*\n\w+)/){    ## Regex for FASTAptamer-Count format
+    if ($_ =~ /(\d+-\d+-\d+.*\d*(?:-\w+)?\n\w+)/){    ## Regex for FASTAptamer-Count format
         my @read_count_test = split /-/, $1; ## Splits entry by dashes, loads array
         if ($read_count_test[1] > $filter){     ## Tests for read count filter
             push @sequence_and_info, $1;         ## Add each matched entry to array

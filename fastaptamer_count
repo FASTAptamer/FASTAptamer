@@ -1,4 +1,6 @@
 #!/usr/bin/env perl
+use strict;
+use warnings;
 
 ## Last Modified January 19th, 2015 22:22 CST
 
@@ -12,19 +14,22 @@
 
 use Getopt::Long;    ## Core Perl module for command line arguments/options
 
+my $Practically_Infinite = 999_999_999_999_999_999; # Just under a billion squared
+
 my $start = time;    ## Starts program execution timer
 my $input_fh;        ## Input file handle
 my $output_fh;       ## Output file handle
 my $quiet;           ## true/false variable for summary report supression
 my $help;            ## true/false variable for help screen
 my $version;         ## true/false variable for version screen
-
+my $unique;          ## true/false variable for creating unique sequence IDs
                                            ## Take command line arguments for...
-GetOptions (    "input=s" => \$input_fh,        ## ...input file
-                "output=s" => \$output_fh,      ## ...output file
-                "quiet" => \$quiet,             ## ...supressing std. out
-                "version" => \$version,         ## ...showing version screen
-                "help" => \$help);              ## ...showing help screen
+GetOptions (    "input=s"  => \$input_fh,      ## ...input file
+                "output=s" => \$output_fh,     ## ...output file
+                "quiet"    => \$quiet,         ## ...supressing std. out
+                "version"  => \$version,       ## ...showing version screen
+                "unique"   => \$unique,        ## ...creating unique seq IDs
+                "help"     => \$help);         ## ...showing help screen
 		
 if (defined $help){                           ## Print help screen if -h is true
     print <<"HELP";
@@ -40,6 +45,7 @@ Usage: fastaptamer_count [-h] [-q] [-v] [-i INFILE] [-o OUTFILE]
     [-v]            = Display version.
     [-i INFILE]     = FASTQ input file. REQUIRED.
     [-o OUTFILE]    = FASTA output file. REQUIRED.
+    [-u ]           = Create unique sequence ID's
 
 FASTAptamer-Count serves as the gateway to the FASTAptamer toolkit.  For a given
 .FASTQ input file, FASTAptamer-Count will determine the number of times each se-
@@ -60,7 +66,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.4
+FASTAptamer v1.0.6
 	
 VERSION
 exit;
@@ -91,18 +97,20 @@ my %sequence_reads;
 
 my $entries = 0;    ## Counts the number of entries processed
 
-$/ = "@"; ## Change default input record separator to read FASTQ formatted file	
-
 ################################################################################
 ## Read input file and for each entry, add sequence or increment value in hash #
 ################################################################################
 
 while (<INPUT>){
-    if ($_ =~ /.+\n(\S+)\n.+\n.+/){
-        my $sequence = $1;
-        $sequence_reads{$sequence} += 1;
-        $entries++;
-    }
+    my $sequence    = <INPUT>;
+    my $qual_header = <INPUT>;
+    my $qual_scores = <INPUT>;
+
+    warn "Record for $_ malformed" unless $qual_scores;
+
+    chomp $sequence;
+    $sequence_reads{$sequence} += 1;
+    $entries++;
 }
 
 close INPUT;
@@ -124,22 +132,35 @@ my @vals = @sequence_reads{@keys};
 ## also known as standard competition ranking.                                   #
 ##################################################################################
 
-my $last_reads_count = $vals[0];
+my $last_reads_count = $Practically_Infinite;
 my $rank = 1;
 
+my $alpha_label = 'A';
 for my $i (0..$#keys){
     my $current_reads_count = $vals[$i];
     if ($current_reads_count < $last_reads_count){
+
+        # New rank, so increment rank
         $rank = $i + 1; 
+        
+        # New rank, so reset alpha label
+        $alpha_label = 'A';
+
         print OUTPUT ">$rank-$vals[$i]-";
         printf OUTPUT "%.2f", ($current_reads_count/$entries)*(1000000);
+        print OUTPUT "-$alpha_label" if $unique;
         print OUTPUT "\n";
         print OUTPUT "$keys[$i]\n";
 		
     }
     elsif ($current_reads_count == $last_reads_count){
+
+        # Old rank, so increment alpha label (e.g. 'A' becomes 'B')
+        $alpha_label++;
+
         print OUTPUT ">$rank-$vals[$i]-";
         printf OUTPUT "%.2f", ($current_reads_count/$entries)*(1000000);
+        print OUTPUT "-$alpha_label" if $unique;
         print OUTPUT "\n";
         print OUTPUT "$keys[$i]\n";
     }

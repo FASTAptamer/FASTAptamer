@@ -17,6 +17,14 @@ use Path::Tiny;
     my $expected = string_from('expected');
     is( $result, $expected, 'successfully created single cluster' );
 }
+{
+    my $input_filename  = filename_for('input_tied_sequence');
+    my $output_filename = Path::Tiny->tempfile();
+    system("./fastaptamer_cluster -d 2 -c 2 -i $input_filename -o $output_filename");
+    my $result   = path($output_filename)->slurp;
+    my $expected = string_from('expected_tied_sequence');
+    is( $result, $expected, 'successfully created single cluster' );
+}
 
 done_testing();
 
@@ -62,4 +70,26 @@ GAAAAAAAAAAAAAAAAA
 >4-200-200000.0-1-4-1
 TAAAAAAAAAAAAAAAAA
 >5-75-75000.0-2-1-0
+CCCCCCCCCAAAAAAAAA
+__[ input_tied_sequence ]__
+>1-245-245000.0-A
+AAAAAAAAAAAAAAAAAA
+>2-240-240000.0-A
+CAAAAAAAAAAAAAAAAA
+>2-240-240000.0-B
+GAAAAAAAAAAAAAAAAA
+>3-200-200000.0-A
+TAAAAAAAAAAAAAAAAA
+>4-75-75000.0-A
+CCCCCCCCCAAAAAAAAA
+__[ expected_tied_sequence ]__
+>1-245-245000.0-A-1-1-0
+AAAAAAAAAAAAAAAAAA
+>2-240-240000.0-A-1-2-1
+CAAAAAAAAAAAAAAAAA
+>2-240-240000.0-B-1-3-1
+GAAAAAAAAAAAAAAAAA
+>3-200-200000.0-A-1-4-1
+TAAAAAAAAAAAAAAAAA
+>4-75-75000.0-A-2-1-0
 CCCCCCCCCAAAAAAAAA
