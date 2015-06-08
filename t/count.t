@@ -18,6 +18,18 @@ use Path::Tiny;
     is( $result, $expected, 'successfully created count file' );
 }
 
+{
+    my $input_filename  = filename_for('input_unique_IDs');
+    my $output_filename = Path::Tiny->tempfile();
+    system("./fastaptamer_count -u -i $input_filename -o $output_filename");
+    my $result   = path($output_filename)->slurp;
+    my $expected_A = string_from('expected_unique_IDs_A');
+    my $expected_B = string_from('expected_unique_IDs_B');
+
+    # Two possible results since the order of the result is hash-based and there are two possibilities
+    ok( ($result eq $expected_A) || ($result eq $expected_B) , 'successfully created count file with unique sequence IDs' );
+}
+
 done_testing();
 
 sub string_from {
@@ -72,4 +84,63 @@ AAAAAAAAAAAAAAAAAA
 >2-2-333333.33
 GAAAAAAAAAAAAAAAAA
 >3-1-166666.67
+CCCCCCCCCAAAAAAAAA
+__[ input_unique_IDs ]__
+@
+AAAAAAAAAAAAAAAAAA
++
+@HHHH@HHHHHHHH@HHH
+@B
+AAAAAAAAAAAAAAAAAA
++
+@HHHHHHHHHHHHHHHHH
+@C
+GAAAAAAAAAAAAAAAAA
++
+HHHHHHHHHHHHHHHHHH
+@D
+GAAAAAAAAAAAAAAAAA
++
+HHHHHHHHHHHHHHHHHH
+@E
+CCCCCCCCCAAAAAAAAA
++
+HHHHHHHHHHHHHHHHHH
+@F
+AAAAAAAAAAAAAAAAAA
++
+HHHHHHHHHHHHHHHHHH
+@G
+AAAAAAAAAGGGGGGGGG
++
+HHHHHHHHHHHHHHHHHH
+@
+AAAAAAAAAAAAAAAAAA
++
+@HHHH@HHHHHHHH@HHH
+@
+AAAAAAAAAAAAAAAAAA
++
+@HHHH@HHHHHHHH@HHH
+@
+AAAAAAAAAAAAAAAAAA
++
+@HHHH@HHHHHHHH@HHH
+__[ expected_unique_IDs_A ]__
+>1-6-600000.00-A
+AAAAAAAAAAAAAAAAAA
+>2-2-200000.00-A
+GAAAAAAAAAAAAAAAAA
+>3-1-100000.00-A
+CCCCCCCCCAAAAAAAAA
+>3-1-100000.00-B
+AAAAAAAAAGGGGGGGGG
+__[ expected_unique_IDs_B ]__
+>1-6-600000.00-A
+AAAAAAAAAAAAAAAAAA
+>2-2-200000.00-A
+GAAAAAAAAAAAAAAAAA
+>3-1-100000.00-A
+AAAAAAAAAGGGGGGGGG
+>3-1-100000.00-B
 CCCCCCCCCAAAAAAAAA

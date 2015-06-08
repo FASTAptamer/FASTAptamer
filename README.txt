@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------  
  
-FASTAptamer v1.0.5
+FASTAptamer v1.0.6
 
 If you use, adapt, or modify FASTAptamer please cite:
 Khalid K. Alam, Jonathan L. Chang & Donald H. Burke
@@ -284,6 +284,11 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 --------------------------------------------------------------------------------
 
 VIII. Version History
+
+Version 1.0.6 - Released June 8th, 2015.
+Added the option to fastaptamer_count for generating unique IDs.
+Modified fastaptamer_cluster to be able to read count files that contain unique
+IDs
 
 Version 1.0.5 - Released May 29th, 2015.
 Fixed bug in fastapatmer_count that was sensitive to an at-sign (@) in quality 
