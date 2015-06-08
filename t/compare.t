@@ -54,15 +54,6 @@ sub string_from {
     return ${$sref};
 }
 
-sub fh_from {
-    my $section = shift;
-    my $sref    = sref_from($section);
-
-    #Create filehandle to the referenced scalar
-    open( my $fh, '<', $sref );
-    return $fh;
-}
-
 sub filename_for {
     my $section           = shift;
     my ( $fh, $filename ) = tempfile();
@@ -77,12 +68,6 @@ sub temp_filename {
     close $fh;
     return $filename;
 }
-
-#------------------------------------------------------------------------
-# IMPORTANT!
-#
-# Each line from each section automatically ends with a newline character
-#------------------------------------------------------------------------
 
 __DATA__
 __[ input_A ]__
