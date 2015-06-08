@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------  
  
-FASTAptamer v1.0.6
+FASTAptamer v1.0.7
 
 If you use, adapt, or modify FASTAptamer please cite:
 Khalid K. Alam, Jonathan L. Chang & Donald H. Burke
@@ -284,6 +284,10 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 --------------------------------------------------------------------------------
 
 VIII. Version History
+
+Version 1.0.7 - Released June 8th, 2015
+Modified fastaptamer_compare to handle optional uniqueness labels in sequence I-
+Ds. Added test for fastaptamer_compare.
 
 Version 1.0.6 - Released June 8th, 2015.
 Added the option to fastaptamer_count for generating unique IDs.

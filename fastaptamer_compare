@@ -71,7 +71,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.6
+FASTAptamer v1.0.7
 	
 VERSION
 exit;
@@ -146,8 +146,23 @@ my $bin_high=0;
 ## reads per million for the sequence.					                       #
 ################################################################################
 
+my $Count_Record = qr{
+                         \d+         # Sequence number
+                         -           # literal dash
+                         \d+         # Read counts
+                         -           # literal dash
+                         (           # Beginning of first capture
+                           \d+\.?\d*   # Counts per million (with optional decimals)
+                         )           # End of first capture
+                         (?:-\w+)?   # Optional label for uniqueness
+                         \n          # Newline
+                         (           # Beginning of second capture
+                            \S+         # sequence represented by "nonspace" characters
+                         )           # End of second capture
+                   }xms;    ## Regex for FASTAptamer-Count format
+
 while (<X_file>){
-    if ($_ =~ /\d+-\d+-(\d+\.?\d*)\n(\S+)/){
+    if ($_ =~ /$Count_Record/){
         my $reads_per_million = $1;
         my $sequence = $2;
         $sequences_in_x{$sequence} = $reads_per_million;
@@ -157,7 +172,7 @@ while (<X_file>){
 close X_file;
 
 while (<Y_file>){
-    if ($_ =~ /\d+-\d+-(\d+\.?\d*)\n(\S+)/){
+    if ($_ =~ /$Count_Record/){
         my $reads_per_million = $1;
         my $sequence = $2;
         $sequences_in_y{$sequence} = $reads_per_million;
