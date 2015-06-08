@@ -59,6 +59,15 @@ ant FASTA file in the following format for each sequence:
 Summary report (total reads, unique reads, and execution time) is displayed as 
 STDOUT at program completion unless [-q] is invoked.
 
+If the -u flag is used, the FASTA file will have the following format:
+
+        >RANK-READS-RPM-UNIQ
+        SEQUENCE
+
+Where UNIQ is an alphabetical label that distinguishes sequences with identical
+RANK and READS (and therefore identical RPM too). This label starts at 'A' and
+becomes multi-character for the 27th and later sequence with identical RANK and
+READS.
 HELP
 exit;
 }
