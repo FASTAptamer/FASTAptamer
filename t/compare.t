@@ -5,12 +5,9 @@ use autodie;  # Fatal exceptions for common unrecoverable errors (e.g. w/open)
 
 # Testing-related modules
 use Test::More;                  # provide testing functions (e.g. is, like)
-use Test::LongString;            # Compare strings byte by byte
 use Data::Section -setup;        # Set up labeled DATA sections
 use File::Temp  qw( tempfile );  #
 use File::Slurp qw( slurp    );  # Read a file into a string
-use English '-no_match_vars'; # Readable names for special variables
-                              #  (e.g. $@ is $EVAL_ERROR)
 
 
 {
@@ -66,20 +63,6 @@ sub fh_from {
     return $fh;
 }
 
-sub assign_filename_for {
-    my $filename = shift;
-    my $section  = shift;
-
-    # Don't overwrite existing file
-    die "'$filename' already exists." if -e $filename;
-
-    my $string   = string_from($section);
-    open(my $fh, '>', $filename);
-    print {$fh} $string;
-    close $fh;
-    return;
-}
-
 sub filename_for {
     my $section           = shift;
     my ( $fh, $filename ) = tempfile();
@@ -93,12 +76,6 @@ sub temp_filename {
     my ($fh, $filename) = tempfile();
     close $fh;
     return $filename;
-}
-
-sub delete_temp_file {
-    my $filename  = shift;
-    my $delete_ok = unlink $filename;
-    ok($delete_ok, "deleted temp file '$filename'");
 }
 
 #------------------------------------------------------------------------
