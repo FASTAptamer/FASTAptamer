@@ -286,7 +286,7 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 VIII. Version History
 
 Version 1.0.8 - Released June 17th, 2015
-Optional uniqueness labels now in format like " >RANK(UNIQ)-READS-RPM" instead 
+Optional uniqueness labels now in format like ">RANK(UNIQ)-READS-RPM" instead 
 of ">RANK-READS-RPM-UNIQ". 
 
 Version 1.0.7 - Released June 8th, 2015
