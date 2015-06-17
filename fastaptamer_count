@@ -59,6 +59,15 @@ ant FASTA file in the following format for each sequence:
 Summary report (total reads, unique reads, and execution time) is displayed as 
 STDOUT at program completion unless [-q] is invoked.
 
+If the -u flag is used, the FASTA file will have the following format:
+
+        >RANK(UNIQ)-READS-RPM
+        SEQUENCE
+
+Where UNIQ is a numeric label that distinguishes sequences with identical
+RANK and READS (and therefore identical RPM too). This label starts at '1' and
+increments by one for each new sequence that has the same RANK. This label is r-
+eset to 1 each time RANK increases.
 HELP
 exit;
 }
@@ -66,7 +75,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.7
+FASTAptamer v1.0.8
 	
 VERSION
 exit;
@@ -135,7 +144,7 @@ my @vals = @sequence_reads{@keys};
 my $last_reads_count = $Practically_Infinite;
 my $rank = 1;
 
-my $alpha_label = 'A';
+my $uniq_label = 1;
 for my $i (0..$#keys){
     my $current_reads_count = $vals[$i];
     if ($current_reads_count < $last_reads_count){
@@ -143,29 +152,30 @@ for my $i (0..$#keys){
         # New rank, so increment rank
         $rank = $i + 1; 
         
-        # New rank, so reset alpha label
-        $alpha_label = 'A';
+        # New rank, so reset unique label
+        $uniq_label = 1;
 
-        print OUTPUT ">$rank-$vals[$i]-";
+        print OUTPUT ">$rank";
+        print OUTPUT "($uniq_label)" if $unique;
+        print OUTPUT "-$vals[$i]-";
         printf OUTPUT "%.2f", ($current_reads_count/$entries)*(1000000);
-        print OUTPUT "-$alpha_label" if $unique;
         print OUTPUT "\n";
         print OUTPUT "$keys[$i]\n";
-		
     }
     elsif ($current_reads_count == $last_reads_count){
 
-        # Old rank, so increment alpha label (e.g. 'A' becomes 'B')
-        $alpha_label++;
+        # Old rank, so increment unique label
+        $uniq_label++;
 
-        print OUTPUT ">$rank-$vals[$i]-";
+        print OUTPUT ">$rank";
+        print OUTPUT "($uniq_label)" if $unique;
+        print OUTPUT "-$vals[$i]-";
         printf OUTPUT "%.2f", ($current_reads_count/$entries)*(1000000);
-        print OUTPUT "-$alpha_label" if $unique;
         print OUTPUT "\n";
         print OUTPUT "$keys[$i]\n";
+
     }
     $last_reads_count = $vals[$i];
-	
 }
 
 close OUTPUT;

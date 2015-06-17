@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------  
  
-FASTAptamer v1.0.7
+FASTAptamer v1.0.8
 
 If you use, adapt, or modify FASTAptamer please cite:
 Khalid K. Alam, Jonathan L. Chang & Donald H. Burke
@@ -284,6 +284,10 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 --------------------------------------------------------------------------------
 
 VIII. Version History
+
+Version 1.0.8 - Released June 17th, 2015
+Optional uniqueness labels now in format like ">RANK(UNIQ)-READS-RPM" instead 
+of ">RANK-READS-RPM-UNIQ". 
 
 Version 1.0.7 - Released June 8th, 2015
 Modified fastaptamer_compare to handle optional uniqueness labels in sequence I-
