@@ -61,13 +61,13 @@ STDOUT at program completion unless [-q] is invoked.
 
 If the -u flag is used, the FASTA file will have the following format:
 
-        >RANK-READS-RPM-UNIQ
+        >RANK(UNIQ)-READS-RPM
         SEQUENCE
 
-Where UNIQ is an alphabetical label that distinguishes sequences with identical
-RANK and READS (and therefore identical RPM too). This label starts at 'A' and
-becomes multi-character for the 27th and later sequence with identical RANK and
-READS.
+Where UNIQ is a numeric label that distinguishes sequences with identical
+RANK and READS (and therefore identical RPM too). This label starts at '1' and
+increments by one for each new sequence that has the same RANK. This label is r-
+eset to 1 each time RANK increases.
 HELP
 exit;
 }
