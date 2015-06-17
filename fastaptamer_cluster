@@ -80,7 +80,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.7
+FASTAptamer v1.0.8
 	
 VERSION
 exit;
@@ -113,16 +113,16 @@ my $entries;             ## Variable to keep track of the number of entries
 $/= ">";   ## Change default input record separator to read FASTA formatted file
 
 my $Count_Record = qr{
-                       (           # Beginning of capture
-                         \d+         # Sequence number
-                         -           # literal dash
-                         \d+         # Read counts
-                         -           # literal dash
-                         \d+\.?\d*   # Counts per million (with optional decimals)
-                         (?:-\w+)?   # Optional label for uniqueness
-                         \n          # Newline
-                         \w+         # sequence represented by "word" characters
-                       )           # End of capture
+                       (              # Beginning of capture
+                         \d+            # Sequence number
+                         (?:\(\d+\))?   # Optional label for uniqueness
+                         -              # literal dash
+                         \d+            # Read counts
+                         -              # literal dash
+                         \d+\.?\d*      # Counts per million (with optional decimals)
+                         \n             # Newline
+                         \w+            # sequence represented by "word" characters
+                       )              # End of capture
                    }xms;    ## Regex for FASTAptamer-Count format
 
 while (<INPUT>){                             ## Reads through entire input file

@@ -285,6 +285,10 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 
 VIII. Version History
 
+Version 1.0.8 - Released June 17th, 2015
+Optional uniqueness labels now in format like ">1121(36)-Reads-RPM", where "36"
+makes it unique. It was previously like ">1121-READS-RPM-36".
+
 Version 1.0.7 - Released June 8th, 2015
 Modified fastaptamer_compare to handle optional uniqueness labels in sequence I-
 Ds. Added test for fastaptamer_compare.

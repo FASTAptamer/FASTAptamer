@@ -71,7 +71,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.7
+FASTAptamer v1.0.8
 	
 VERSION
 exit;
@@ -148,13 +148,13 @@ my $bin_high=0;
 
 my $Count_Record = qr{
                          \d+         # Sequence number
+                         (?:\(\d+\))?   # Optional label for uniqueness
                          -           # literal dash
                          \d+         # Read counts
                          -           # literal dash
                          (           # Beginning of first capture
                            \d+\.?\d*   # Counts per million (with optional decimals)
                          )           # End of first capture
-                         (?:-\w+)?   # Optional label for uniqueness
                          \n          # Newline
                          (           # Beginning of second capture
                             \S+         # sequence represented by "nonspace" characters
