@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------  
  
-FASTAptamer v1.0.8
+FASTAptamer v1.0.9
 
 If you use, adapt, or modify FASTAptamer please cite:
 Khalid K. Alam, Jonathan L. Chang & Donald H. Burke
@@ -116,13 +116,27 @@ ound in the input file, the number of unique sequences, the file input/output n-
 ames and the program execution time. The  summary report can be suppressed by i-
 ncluding the optional flag [-q] on the command line.  
 
+
 Usage: fastaptamer_count [-h] [-q] [-v] [-i INFILE] [-o OUTFILE] 
+
     [-h]            = Help screen.
     [-q]            = Suppress STDOUT of run report.
     [-v]            = Display version.
     [-i INFILE]     = FASTQ input file. REQUIRED.
     [-o OUTFILE]    = FASTA output file. REQUIRED.
-    
+    [-u ]           = Create unique sequence ID's
+
+If the -u flag is used, the FASTA file will have the following format (starting
+at the second sequence that has the same rank):
+
+        >RANK(UNIQ)-READS-RPM
+        SEQUENCE
+
+Where UNIQ is a numeric label that distinguishes sequences with identical
+RANK and READS (and therefore identical RPM too). This label starts at '2' and
+increments by one for each new sequence that has the same RANK. This label is r-
+eset each time RANK increases.
+
 --------------------------------------------------------------------------------
 
 IV. FASTAptamer-Compare
@@ -284,6 +298,12 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 --------------------------------------------------------------------------------
 
 VIII. Version History
+
+Version 1.0.9 - Released July 7th, 2015
+If selected, optional uniqueness labels only start appearing on the second seq-
+uence of the same rank. Tests were updated to reflect this change. However, co-
+unt files created with version 1.0.8 should still process correctly with this
+version.
 
 Version 1.0.8 - Released June 17th, 2015
 Optional uniqueness labels now in format like ">RANK(UNIQ)-READS-RPM" instead 
