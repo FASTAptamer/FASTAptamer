@@ -7,7 +7,7 @@ use warnings;
 ## Citation:
 ## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
 ## FASTAptamer: A Bioinformatic Toolkit for High-Throughput Sequence Analysis of 
-## Combinatorial Selections. Molecular Therapy — Nucleic Acids. 2015.
+## Combinatorial Selections. Molecular Therapy -- Nucleic Acids. 2015.
 ## DOI: 10.1038/mtna.2015.4
 
 ## Distributed under GNU General Public License v3
@@ -17,19 +17,19 @@ use Getopt::Long;    ## Core Perl module for command line arguments/options
 my $Practically_Infinite = 999_999_999_999_999_999; # Just under a billion squared
 
 my $start = time;    ## Starts program execution timer
-my $input_fh;        ## Input file handle
-my $output_fh;       ## Output file handle
+my $input_filename;  ## Input file name
+my $output_filename; ## Output file name
 my $quiet;           ## true/false variable for summary report supression
 my $help;            ## true/false variable for help screen
 my $version;         ## true/false variable for version screen
 my $unique;          ## true/false variable for creating unique sequence IDs
-                                           ## Take command line arguments for...
-GetOptions (    "input=s"  => \$input_fh,      ## ...input file
-                "output=s" => \$output_fh,     ## ...output file
-                "quiet"    => \$quiet,         ## ...supressing std. out
-                "version"  => \$version,       ## ...showing version screen
-                "unique"   => \$unique,        ## ...creating unique seq IDs
-                "help"     => \$help);         ## ...showing help screen
+                                             ## Take command line arguments for...
+GetOptions (    "input=s"  => \$input_filename,  ## ...input file
+                "output=s" => \$output_filename, ## ...output file
+                "quiet"    => \$quiet,           ## ...supressing std. out
+                "version"  => \$version,         ## ...showing version screen
+                "unique"   => \$unique,          ## ...creating unique seq IDs
+                "help"     => \$help);           ## ...showing help screen
 		
 if (defined $help){                           ## Print help screen if -h is true
     print <<"HELP";
@@ -85,7 +85,7 @@ exit;
 ## Open input file or exit with warning  #
 ##########################################
 
-open (INPUT, '<', $input_fh) or die		
+open (INPUT, '<', $input_filename) or die		
 "\nCould not open input file or no input file was specified.\n
 See help documentation [-h], README, or User's Guide for program usage.\n";
 
@@ -93,7 +93,7 @@ See help documentation [-h], README, or User's Guide for program usage.\n";
 ## Open output file or exit with warning #
 ##########################################
 
-open (OUTPUT, '>', $output_fh) or die		
+open (OUTPUT, '>', $output_filename) or die		
 "\nCould not open output file or no output file was specified.\n
 See help documentation [-h], README, or User's Guide for program usage.\n";
 
@@ -187,8 +187,8 @@ close OUTPUT;
 
 unless ($quiet){
     print "\n$entries total sequences.  " . ($#keys + 1) . " unique sequences.\n";
-    print "Input file: \"$input_fh\".\n";
-    print "Output file: \"$output_fh\".\n";
+    print "Input file: \"$input_filename\".\n";
+    print "Output file: \"$output_filename\".\n";
 
     my $duration = time - $start;
     print "Execution time: $duration s.\n";
