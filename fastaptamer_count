@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-## Last Modified January 19th, 2015 22:22 CST
+## Last Modified July 7th, 2015 10:37 CDT by Christopher Bottoms
 
 ## Citation:
 ## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
@@ -75,7 +75,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.8
+FASTAptamer v1.0.9
 	
 VERSION
 exit;
@@ -85,7 +85,7 @@ exit;
 ## Open input file or exit with warning  #
 ##########################################
 
-open (INPUT, '<', $input_filename) or die		
+open (my $fh_in, '<', $input_filename) or die		
 "\nCould not open input file or no input file was specified.\n
 See help documentation [-h], README, or User's Guide for program usage.\n";
 
@@ -93,7 +93,7 @@ See help documentation [-h], README, or User's Guide for program usage.\n";
 ## Open output file or exit with warning #
 ##########################################
 
-open (OUTPUT, '>', $output_filename) or die		
+open (my $fh_out, '>', $output_filename) or die		
 "\nCould not open output file or no output file was specified.\n
 See help documentation [-h], README, or User's Guide for program usage.\n";
 
@@ -110,19 +110,20 @@ my $entries = 0;    ## Counts the number of entries processed
 ## Read input file and for each entry, add sequence or increment value in hash #
 ################################################################################
 
-while (<INPUT>){
-    my $sequence    = <INPUT>;
-    my $qual_header = <INPUT>;
-    my $qual_scores = <INPUT>;
+# While loop terminates when no more lines can be read from $fh_in
+while (my $seq_header = readline $fh_in){
+    my $sequence    = readline $fh_in;
+    my $qual_header = readline $fh_in;
+    my $qual_scores = readline $fh_in;
 
-    warn "Record for $_ malformed" unless $qual_scores;
+    warn "Record for $seq_header malformed" unless $qual_scores;
 
     chomp $sequence;
     $sequence_reads{$sequence} += 1;
     $entries++;
 }
 
-close INPUT;
+close $fh_in;
 
 ############################################
 ## Sort hash by decreasing read count by   #
@@ -149,36 +150,33 @@ for my $i (0..$#keys){
     my $current_reads_count = $vals[$i];
     if ($current_reads_count < $last_reads_count){
 
-        # New rank, so increment rank
-        $rank = $i + 1; 
-        
-        # New rank, so reset unique label
+        # New rank, so increment rank, and reset unique label
+        $rank       = $i + 1; 
         $uniq_label = 1;
 
-        print OUTPUT ">$rank";
-        print OUTPUT "($uniq_label)" if $unique;
-        print OUTPUT "-$vals[$i]-";
-        printf OUTPUT "%.2f", ($current_reads_count/$entries)*(1000000);
-        print OUTPUT "\n";
-        print OUTPUT "$keys[$i]\n";
+        print $fh_out ">$rank";
+        print $fh_out "-$vals[$i]-";
+        printf $fh_out "%.2f", ($current_reads_count/$entries)*(1000000);
+        print $fh_out "\n";
+        print $fh_out "$keys[$i]\n";
     }
     elsif ($current_reads_count == $last_reads_count){
 
         # Old rank, so increment unique label
         $uniq_label++;
 
-        print OUTPUT ">$rank";
-        print OUTPUT "($uniq_label)" if $unique;
-        print OUTPUT "-$vals[$i]-";
-        printf OUTPUT "%.2f", ($current_reads_count/$entries)*(1000000);
-        print OUTPUT "\n";
-        print OUTPUT "$keys[$i]\n";
+        print $fh_out ">$rank";
+        print $fh_out "($uniq_label)" if $unique;
+        print $fh_out "-$vals[$i]-";
+        printf $fh_out "%.2f", ($current_reads_count/$entries)*(1000000);
+        print $fh_out "\n";
+        print $fh_out "$keys[$i]\n";
 
     }
     $last_reads_count = $vals[$i];
 }
 
-close OUTPUT;
+close $fh_out;
 
 ##################################################################################
 ## Unless the -q option is invoked, the following statistics are printed as      #

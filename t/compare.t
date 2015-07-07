@@ -72,14 +72,14 @@ sub temp_filename {
 
 __DATA__
 __[ input_A ]__
->1(1)-40-400000.00
+>1-40-400000.00
 AAAAAAAAAAAAAAAAAA
->2(2)-40-400000.00
+>1(2)-40-400000.00
 GAAAAAAAAAAAAAAAAA
 __[ input_B ]__
->1(1)-4-400000.00
+>1-4-400000.00
 GAAAAAAAAAAAAAAAAA
->2(2)-4-400000.00
+>1(2)-4-400000.00
 AAAAAAAAAAAAAAAAAA
 __[ expected_header  ]__
 Sequence	RPM (x)	RPM (y)	log(base2)(y/x)
