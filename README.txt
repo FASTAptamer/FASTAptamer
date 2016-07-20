@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------  
  
-FASTAptamer v1.0.9
+FASTAptamer v1.0.10
 
 If you use, adapt, or modify FASTAptamer please cite:
 Khalid K. Alam, Jonathan L. Chang & Donald H. Burke
@@ -298,6 +298,9 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 --------------------------------------------------------------------------------
 
 VIII. Version History
+
+Version 1.0.10 - Released July 20th, 2016
+Now fastaptamer_count can accept FASTA files as input, by using the -f flag.
 
 Version 1.0.9 - Released July 7th, 2015
 If selected, optional uniqueness labels only start appearing on the second seq-

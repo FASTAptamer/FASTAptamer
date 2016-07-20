@@ -24,12 +24,14 @@ my $output_filename; ## Output file name
 my $quiet;           ## true/false variable for summary report supression
 my $help;            ## true/false variable for help screen
 my $version;         ## true/false variable for version screen
+my $fasta;           ## input is in FASTA format
 my $unique;          ## true/false variable for creating unique sequence IDs
                                              ## Take command line arguments for...
 GetOptions (    "input=s"  => \$input_filename,  ## ...input file
                 "output=s" => \$output_filename, ## ...output file
                 "quiet"    => \$quiet,           ## ...supressing std. out
                 "version"  => \$version,         ## ...showing version screen
+                "fasta"    => \$fasta,           ## ...format of input file is FASTA
                 "unique"   => \$unique,          ## ...creating unique seq IDs
                 "help"     => \$help);           ## ...showing help screen
 		
@@ -45,15 +47,17 @@ Usage: fastaptamer_count [-h] [-q] [-v] [-i INFILE] [-o OUTFILE]
     [-h]            = Help screen.
     [-q]            = Suppress STDOUT of run report.
     [-v]            = Display version.
-    [-i INFILE]     = FASTQ input file. REQUIRED.
+    [-i INFILE]     = input file. REQUIRED.
     [-o OUTFILE]    = FASTA output file. REQUIRED.
+    [-f ]           = input file is in FASTA format (otherwise it must be FASTQ)
     [-u ]           = Create unique sequence ID's
 
 FASTAptamer-Count serves as the gateway to the FASTAptamer toolkit.  For a given
-.FASTQ input file, FASTAptamer-Count will determine the number of times each se-
-quence was read, rank and sort sequences by decreasing total reads, and normali-
-ze sequence frequency to reads per million. Output is generated as a non-redund-
-ant FASTA file in the following format for each sequence:
+.FASTQ input file (or FASTA input file if the -f flag is used), FASTAptamer-Cou-
+nt will determine the number of times each sequence was read, rank and sort seq-
+uences by decreasing total reads, and normalize sequence frequency to reads per
+million. Output is generated as a non-redundant FASTA file in the following for-
+mat for each sequence:
 
         >RANK-READS-RPM
         SEQUENCE
@@ -78,7 +82,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.9
+FASTAptamer v1.0.10
 	
 VERSION
 exit;
@@ -113,18 +117,32 @@ my $entries = 0;    ## Counts the number of entries processed
 ## Read input file and for each entry, add sequence or increment value in hash #
 ################################################################################
 
-# While loop terminates when no more lines can be read from $fh_in
-while (my $seq_header = readline $fh_in){
-    my $sequence    = readline $fh_in;
-    my $qual_header = readline $fh_in;
-    my $qual_scores = readline $fh_in;
 
-    warn "Record for $seq_header malformed" unless $qual_scores;
-
-    chomp $sequence;
-    $sequence_reads{$sequence} += 1;
-    $entries++;
+if ($fasta){
+    # While loop terminates when no more lines can be read from $fh_in
+    while (my $seq_header = readline $fh_in){
+        my $sequence    = readline $fh_in;
+        chomp $sequence;
+        $sequence_reads{$sequence} += 1;
+        $entries++;
+    }
 }
+else {
+    # While loop terminates when no more lines can be read from $fh_in
+    while (my $seq_header = readline $fh_in){
+        my $sequence    = readline $fh_in;
+        my $qual_header = readline $fh_in;
+        my $qual_scores = readline $fh_in;
+
+        warn "Record for $seq_header malformed" unless $qual_scores;
+
+        chomp $sequence;
+        $sequence_reads{$sequence} += 1;
+        $entries++;
+    }
+
+}
+
 
 close $fh_in;
 
