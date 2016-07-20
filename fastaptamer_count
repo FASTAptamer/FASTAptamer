@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-## Last Modified July 9th, 2015 08:33 CDT by Christopher Bottoms
+## Last Modified July 20th, 2015 16:35 CDT by Christopher Bottoms
 
 ## Citation:
 ## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
@@ -82,7 +82,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.10
+FASTAptamer v1.0.11
 	
 VERSION
 exit;
@@ -117,6 +117,37 @@ my $entries = 0;    ## Counts the number of entries processed
 ## Read input file and for each entry, add sequence or increment value in hash #
 ################################################################################
 
+if (!$fasta){
+
+    # While loop terminates when no more lines can be read from $fh_in
+    while (my $seq_header = readline $fh_in){
+        my $sequence    = readline $fh_in;
+        my $qual_header = readline $fh_in;
+        my $qual_scores = readline $fh_in;
+
+        # catch occasional case in which there is an incomplete record
+        warn "Record for $seq_header malformed" unless $qual_scores;
+
+        chomp $sequence;
+        $sequence_reads{$sequence} += 1;
+        $entries++;
+
+        if ( index($seq_header,'>') == 0){
+            warn "This seems to be a FASTA file, processing it as such\n";
+
+            # capture sequence from "qual scores"
+            chomp $qual_scores;
+            my $almost_missed_seq = $qual_scores;
+            $sequence_reads{$almost_missed_seq}++;
+            $entries++;
+
+            # set fasta flag and get out of this loop so that we can
+            # process this file as a FASTA
+            $fasta = 1;
+            last;
+        }
+    }
+}
 
 if ($fasta){
     # While loop terminates when no more lines can be read from $fh_in
@@ -127,22 +158,6 @@ if ($fasta){
         $entries++;
     }
 }
-else {
-    # While loop terminates when no more lines can be read from $fh_in
-    while (my $seq_header = readline $fh_in){
-        my $sequence    = readline $fh_in;
-        my $qual_header = readline $fh_in;
-        my $qual_scores = readline $fh_in;
-
-        warn "Record for $seq_header malformed" unless $qual_scores;
-
-        chomp $sequence;
-        $sequence_reads{$sequence} += 1;
-        $entries++;
-    }
-
-}
-
 
 close $fh_in;
 

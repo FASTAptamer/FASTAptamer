@@ -5,7 +5,7 @@
 ## Citation:
 ## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
 ## "FASTAptamer: A Bioinformatic Toolkit for High-Throughput Sequence Analysis of 
-## Combinatorial Selections." Molecular Therapy — Nucleic Acids. 2015.
+## Combinatorial Selections." Molecular Therapy -- Nucleic Acids. 2015.
 ## DOI: 10.1038/mtna.2015.4
 
 ## Distributed under GNU General Public License v3
@@ -71,7 +71,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.10
+FASTAptamer v1.0.11
 	
 VERSION
 exit;

@@ -10,7 +10,6 @@
 
 ## Distributed under GNU General Public License v3
 
-
 use Getopt::Long;   ## Core Perl module for command line options/arguments
 
 my $start = time;           ## Starts program execution timer
@@ -80,7 +79,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.10
+FASTAptamer v1.0.11
 	
 VERSION
 exit;

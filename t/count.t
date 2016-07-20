@@ -28,6 +28,15 @@ use Path::Tiny;
 }
 
 {
+    my $input_filename  = filename_for('input_fasta');
+    my $output_filename = Path::Tiny->tempfile();
+    system("./fastaptamer_count -i $input_filename -o $output_filename");
+    my $result   = path($output_filename)->slurp;
+    my $expected = string_from('expected');
+    is( $result, $expected, 'FASTA file automatically detected' );
+}
+
+{
     my $input_filename  = filename_for('input_unique_IDs');
     my $output_filename = Path::Tiny->tempfile();
     system("./fastaptamer_count -u -i $input_filename -o $output_filename");

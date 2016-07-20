@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------  
  
-FASTAptamer v1.0.10
+FASTAptamer v1.0.11
 
 If you use, adapt, or modify FASTAptamer please cite:
 Khalid K. Alam, Jonathan L. Chang & Donald H. Burke
@@ -298,6 +298,11 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 --------------------------------------------------------------------------------
 
 VIII. Version History
+
+Version 1.0.11 - Released July 20th, 2016
+fastaptamer_count may autodetect a FASTA file and switch to FASTA mode. This is
+just a safety net. This behavior is not defined in the usage, and should not be
+depended upon.
 
 Version 1.0.10 - Released July 20th, 2016
 Now fastaptamer_count can accept FASTA files as input, by using the -f flag.
