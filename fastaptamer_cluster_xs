@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 
-## Last Modified March 10th, 2015 13:53 CDT by Christopher Bottoms
+## Last Modified September 20th, 2017 by Christopher Bottoms (implementing
+## changes of vladimirkhramkov)
 
 ## Citation:
 ## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
@@ -9,6 +10,8 @@
 ## DOI: 10.1038/mtna.2015.4
 
 ## Distributed under GNU General Public License v3
+
+use Text::LevenshteinXS qw(distance);
 
 use Getopt::Long;   ## Core Perl module for command line options/arguments
 
@@ -39,7 +42,7 @@ print <<"HELP";
                               FASTAptamer-Cluster
 --------------------------------------------------------------------------------
 
-Usage: fastaptamer_cluster [-h] [-i INFILE] [-o OUTFILE] [-d #] [-f #] [-q] [-v]
+Usage: fastaptamer_cluster_xs [-h] [-i INFILE] [-o OUTFILE] [-d #] [-f #] [-q] [-v]
 
     [-h]            = Help screen.
     [-i INFILE]     = Input file from FASTAptamer-Count. REQUIRED.
@@ -186,7 +189,7 @@ sub get_cluster_iterator {
             my @comparison_seq_metrics = split /-/, $comparison_seq_info[0]; ## Split identifier line
             my $comparison_seq_reads = $comparison_seq_metrics[1]; ## Take reads to tally cluster size
             my $comparison_seq_rpm = $comparison_seq_metrics[2]; ## Take RPM to tally cluster size
-            my $distance = levenshtein( $current_seq_info[1], $comparison_seq_info[1] );
+            my $distance = distance( $current_seq_info[1], $comparison_seq_info[1] );
             ## sends comparison sequence to compare against current seed sequence, returns distances
             if ( $distance > $defined_edit_distance ) { ## If distance is greater than defined
                 push @keepers, $_; ## Add to array for comparison in next iteration
@@ -223,52 +226,3 @@ unless ($quiet) { ## Displays summary report unless -q is invoked
     print "Execution time: $duration s.\n"; 
 }
 
-#############################################################################
-## The subroutines below calculates the Levenshtein edit distance for the   #
-## current "seed" sequence and the comparison sequence that are sent to it  #
-#############################################################################
-
-
-sub levenshtein {
-	my ($s1, $s2) = @_;
-	my ($len1, $len2) = (length $s1, length $s2);
-	
-	return $len2 if ($len1 == 0);
-	return $len1 if ($len2 == 0);
-	
-	my %mat;
-	
-	for (my $i = 0; $i <= $len1; ++$i){
-		for (my $j = 0; $j <= $len2; ++$j){
-			$mat{$i}{$j} = 0;
-			$mat{0}{$j} = $j;
-		}
-		$mat{$i}{0} = $i;
-	}
-	
-	my @ar1 = split(//, $s1);
-	my @ar2 = split(//, $s2);
-
-	for (my $i = 1; $i <= $len1; ++$i){
-		for (my $j = 1; $j <= $len2; ++$j){
-			my $cost = ($ar1[$i-1] eq $ar2[$j-1]) ? 0 : 1;
-			$mat{$i}{$j} = min([$mat{$i-1}{$j} + 1,
-			$mat{$i}{$j-1} + 1,
-			$mat{$i-1}{$j-1} + $cost]);
-		}
-	}
-    return $mat{$len1}{$len2};
-}
-
-sub min
-{
-    my @list = @{$_[0]};
-    my $min = $list[0];
-
-    foreach my $i (@list)
-    {
-        $min = $i if ($i < $min);
-    }
-
-    return $min;
-}

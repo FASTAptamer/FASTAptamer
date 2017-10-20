@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------  
  
-FASTAptamer v1.0.11
+FASTAptamer v1.0.12
 
 If you use, adapt, or modify FASTAptamer please cite:
 Khalid K. Alam, Jonathan L. Chang & Donald H. Burke
@@ -205,6 +205,9 @@ Usage: fastaptamer_cluster [-h] [-i INFILE] [-o OUTFILE] [-d] [-f] [-q] [-v]
     [-q]            = Quiet mode.  Suppresses standard output of file I/O, numb-
                       er of clusters, cluster size and execution time.
     [-v]            = Display version.
+
+(For a speed boost, you can instead use fastaptamer_cluster_xs if you have the
+Text::LevenshteinXS module installed.)
                       
 --------------------------------------------------------------------------------
 
@@ -298,6 +301,10 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 --------------------------------------------------------------------------------
 
 VIII. Version History
+
+Version 1.0.12 - Released October 20th, 2017
+Implemented fastaptamer_cluster as fastaptamer_cluster_xs using the module
+Text::LevenshteinXS. Thanks vladimirkhramkov!
 
 Version 1.0.11 - Released July 20th, 2016
 fastaptamer_count may autodetect a FASTA file and switch to FASTA mode. This is

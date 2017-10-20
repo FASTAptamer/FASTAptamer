@@ -9,21 +9,21 @@ use Test::More;                  # provide testing functions (e.g. is, like)
 use Data::Section -setup;        # Set up labeled DATA sections
 use Path::Tiny;
 
+for my $cluster_app (qw(fastaptamer_cluster fastaptamer_cluster_xs))
 {
-    my $input_filename  = filename_for('input');
-    my $output_filename = Path::Tiny->tempfile();
-    system("./fastaptamer_cluster -d 2 -c 2 -i $input_filename -o $output_filename");
-    my $result   = path($output_filename)->slurp;
-    my $expected = string_from('expected');
-    is( $result, $expected, 'successfully created single cluster' );
-}
-{
-    my $input_filename  = filename_for('input_tied_sequence');
-    my $output_filename = Path::Tiny->tempfile();
-    system("./fastaptamer_cluster -d 2 -c 2 -i $input_filename -o $output_filename");
-    my $result   = path($output_filename)->slurp;
-    my $expected = string_from('expected_tied_sequence');
-    is( $result, $expected, 'successfully created single cluster' );
+
+    for my $set( '', '_tied_sequence')
+    {
+        my $input_name = "input$set";
+        my $expected_name = "expected$set";
+    
+        my $input_filename  = filename_for($input_name);
+        my $output_filename = Path::Tiny->tempfile();
+        system("./$cluster_app -d 2 -c 2 -i $input_filename -o $output_filename");
+        my $result   = path($output_filename)->slurp;
+        my $expected = string_from($expected_name);
+        is( $result, $expected, "$cluster_app successfully created single cluster for $input_name" );
+    }
 }
 
 done_testing();
