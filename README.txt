@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------  
  
-FASTAptamer v1.0.12
+FASTAptamer v1.0.13
 
 If you use, adapt, or modify FASTAptamer please cite:
 Khalid K. Alam, Jonathan L. Chang & Donald H. Burke
@@ -301,6 +301,9 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 --------------------------------------------------------------------------------
 
 VIII. Version History
+
+Version 1.0.13 - Released July 25, 2018
+fastaptamer_count will automatically decompress input file ending in ".gz".
 
 Version 1.0.12 - Released October 20th, 2017
 Implemented fastaptamer_cluster as fastaptamer_cluster_xs using the module

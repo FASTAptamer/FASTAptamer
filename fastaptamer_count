@@ -2,6 +2,8 @@
 use strict;
 use warnings;
 
+use IO::Uncompress::Gunzip; # Core module
+
 ## Last Modified July 20th, 2015 16:35 CDT by Christopher Bottoms
 
 ## Citation:
@@ -82,7 +84,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.12
+FASTAptamer v1.0.13
 	
 VERSION
 exit;
@@ -92,9 +94,7 @@ exit;
 ## Open input file or exit with warning  #
 ##########################################
 
-open (my $fh_in, '<', $input_filename) or die		
-"\nCould not open input file or no input file was specified.\n
-See help documentation [-h], README, or User's Guide for program usage.\n";
+my $fh_in = open_input($input_filename);
 
 ##########################################
 ## Open output file or exit with warning #
@@ -230,3 +230,29 @@ unless ($quiet){
 }
 
 exit;
+
+# Open file for reading (as gzipped compressed if name ends in '.gz')
+sub open_input {
+    my $filename = shift;
+
+    my $fh;
+    if ($filename =~ /\.gz$/xms) {
+
+        $fh = IO::Uncompress::Gunzip->new($filename, MultiStream => 1); # *
+
+        # * MultiStream option makes this decompress more like gunzip would
+        # (i.e. a file containing multiple separate gzipped blocks will be
+        # completely decompressed into a single file).
+
+    }
+    else {
+        # Return normal "reading" filehandle
+        open($fh, '<', $filename);
+    }
+    
+    $fh or die		
+        "\nCould not open input file or no input file was specified.\n
+        See help documentation [-h], README, or User's Guide for program usage.\n";
+
+    return $fh;
+}

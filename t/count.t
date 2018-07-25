@@ -28,7 +28,7 @@ use Path::Tiny;
 }
 
 {
-    my $input_filename  = filename_for('input_fasta');
+    my $input_filename  = gzipped_filename();
     my $output_filename = Path::Tiny->tempfile();
     system("./fastaptamer_count -i $input_filename -o $output_filename");
     my $result   = path($output_filename)->slurp;
@@ -65,9 +65,14 @@ sub filename_for {
     my $string   = string_from($section);
 
     my $tempfile = Path::Tiny->tempfile();
+
     $tempfile->spew($string); 
 
     return $tempfile;
+}
+
+sub gzipped_filename {
+    return 't/example.fq.gz';
 }
 
 __DATA__
