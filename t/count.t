@@ -7,40 +7,40 @@ use autodie;  # Fatal exceptions for common unrecoverable errors (e.g. w/open)
 
 # Testing-related modules
 use Test::More;                  # provide testing functions (e.g. is, like)
-use Path::Tiny;
+use File::Temp qw(tempfile);
 
 {
     my $input_filename  = filename_for('input');
-    my $output_filename = Path::Tiny->tempfile();
+    my $output_filename = temp_filename();
     system("./fastaptamer_count -i $input_filename -o $output_filename");
-    my $result   = path($output_filename)->slurp;
+    my $result   = slurp($output_filename);
     my $expected = string_from('expected');
     is( $result, $expected, 'successfully created count file' );
 }
 
 {
     my $input_filename  = filename_for('input_fasta');
-    my $output_filename = Path::Tiny->tempfile();
+    my $output_filename = temp_filename();
     system("./fastaptamer_count -f -i $input_filename -o $output_filename");
-    my $result   = path($output_filename)->slurp;
+    my $result   = slurp($output_filename);
     my $expected = string_from('expected');
     is( $result, $expected, 'successfully created count file from FASTA input' );
 }
 
 {
     my $input_filename  = gzipped_filename();
-    my $output_filename = Path::Tiny->tempfile();
+    my $output_filename = temp_filename();
     system("./fastaptamer_count -i $input_filename -o $output_filename");
-    my $result   = path($output_filename)->slurp;
+    my $result   = slurp($output_filename);
     my $expected = string_from('expected');
     is( $result, $expected, 'FASTA file automatically detected' );
 }
 
 {
     my $input_filename  = filename_for('input_unique_IDs');
-    my $output_filename = Path::Tiny->tempfile();
+    my $output_filename = temp_filename();
     system("./fastaptamer_count -u -i $input_filename -o $output_filename");
-    my $result   = path($output_filename)->slurp;
+    my $result   = slurp($output_filename);
     my $expected_A = string_from('expected_unique_IDs_A');
     my $expected_B = string_from('expected_unique_IDs_B');
 
@@ -165,17 +165,28 @@ CCCCCCCCCAAAAAAAAA
 
 sub filename_for {
     my $section           = shift;
-    my $string   = string_from($section);
-
-    my $tempfile = Path::Tiny->tempfile();
-
-    $tempfile->spew($string); 
-
-    return $tempfile;
+    my ( $fh, $filename ) = tempfile();
+    my $string            = string_from($section);
+    print {$fh} $string;
+    close $fh;
+    return $filename;
 }
 
 sub gzipped_filename {
     return 't/example.fq.gz';
 }
 
+sub slurp {
+    my $file = shift;
+    open(my $fh, '<', $file) or die;
+    local $/ = undef;
+    my $text = readline $fh;
+    close $fh;
+    return $text;
+}
 
+sub temp_filename {
+    my ($fh, $filename) = tempfile();
+    close $fh;
+    return $filename;
+}

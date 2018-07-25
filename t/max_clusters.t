@@ -7,13 +7,13 @@ use autodie;  # Fatal exceptions for common unrecoverable errors (e.g. w/open)
 
 # Testing-related modules
 use Test::More;                  # provide testing functions (e.g. is, like)
-use Path::Tiny;
+use File::Temp qw(tempfile);
 
 {
     my $input_filename  = filename_for('input');
-    my $output_filename = Path::Tiny->tempfile();
+    my $output_filename = temp_filename();
     system("./fastaptamer_cluster -d 2 -c 1 -i $input_filename -o $output_filename");
-    my $result   = path($output_filename)->slurp;
+    my $result   = slurp($output_filename);
     my $expected = string_from('expected');
     is( $result, $expected, 'successfully created single cluster' );
 }
@@ -52,11 +52,24 @@ TAAAAAAAAAAAAAAAAA
 
 sub filename_for {
     my $section           = shift;
-    my $string   = string_from($section);
-
-    my $tempfile = Path::Tiny->tempfile();
-    $tempfile->spew($string); 
-
-    return $tempfile;
+    my ( $fh, $filename ) = tempfile();
+    my $string            = string_from($section);
+    print {$fh} $string;
+    close $fh;
+    return $filename;
 }
 
+sub temp_filename {
+    my ($fh, $filename) = tempfile();
+    close $fh;
+    return $filename;
+}
+
+sub slurp {
+    my $file = shift;
+    open(my $fh, '<', $file) or die;
+    local $/ = undef;
+    my $text = readline $fh;
+    close $fh;
+    return $text;
+}
