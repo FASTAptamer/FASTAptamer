@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------  
  
-FASTAptamer v1.0.13
+FASTAptamer v1.0.14
 
 If you use, adapt, or modify FASTAptamer please cite:
 Khalid K. Alam, Jonathan L. Chang & Donald H. Burke
@@ -301,6 +301,10 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 --------------------------------------------------------------------------------
 
 VIII. Version History
+
+Version 1.0.14
+Restored error message resulting from empty input file name (Fixed bug introduced in 1.0.13)
+Removed tests' dependencies on non-core Perl modules.
 
 Version 1.0.13 - Released July 25, 2018
 fastaptamer_count will automatically decompress input file ending in ".gz".

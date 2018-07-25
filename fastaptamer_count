@@ -4,7 +4,7 @@ use warnings;
 
 use IO::Uncompress::Gunzip; # Core module
 
-## Last Modified July 20th, 2015 16:35 CDT by Christopher Bottoms
+## Last Modified July 25th, 2018 by Christopher Bottoms
 
 ## Citation:
 ## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
@@ -84,7 +84,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.13
+FASTAptamer v1.0.14
 	
 VERSION
 exit;
