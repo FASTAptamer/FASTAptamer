@@ -1,3 +1,4 @@
+#!/bin/env perl
 package test;
 use 5.008;    # Require at least Perl version 5.8
 use strict;   # Must declare all variables before using them
@@ -6,7 +7,6 @@ use autodie;  # Fatal exceptions for common unrecoverable errors (e.g. w/open)
 
 # Testing-related modules
 use Test::More;                  # provide testing functions (e.g. is, like)
-use Data::Section -setup;        # Set up labeled DATA sections
 use Path::Tiny;
 
 for my $cluster_app (qw(fastaptamer_cluster fastaptamer_cluster_xs))
@@ -30,12 +30,55 @@ done_testing();
 
 sub string_from {
     my $section = shift;
-
-    #Get the scalar reference to the section text
-    my $sref = test->section_data($section);
+    my %text_for = (
+input => ">1-250-250000.0
+AAAAAAAAAAAAAAAAAA
+>2-240-240000.0
+CAAAAAAAAAAAAAAAAA
+>3-235-235000.0
+GAAAAAAAAAAAAAAAAA
+>4-200-200000.0
+TAAAAAAAAAAAAAAAAA
+>5-75-75000.0
+CCCCCCCCCAAAAAAAAA
+",
+expected => ">1-250-250000.0-1-1-0
+AAAAAAAAAAAAAAAAAA
+>2-240-240000.0-1-2-1
+CAAAAAAAAAAAAAAAAA
+>3-235-235000.0-1-3-1
+GAAAAAAAAAAAAAAAAA
+>4-200-200000.0-1-4-1
+TAAAAAAAAAAAAAAAAA
+>5-75-75000.0-2-1-0
+CCCCCCCCCAAAAAAAAA
+",
+input_tied_sequence => ">1-245-245000.0
+AAAAAAAAAAAAAAAAAA
+>2-240-240000.0
+CAAAAAAAAAAAAAAAAA
+>2(2)-240-240000.0
+GAAAAAAAAAAAAAAAAA
+>3-200-200000.0
+TAAAAAAAAAAAAAAAAA
+>4-75-75000.0
+CCCCCCCCCAAAAAAAAA
+",
+expected_tied_sequence => ">1-245-245000.0-1-1-0
+AAAAAAAAAAAAAAAAAA
+>2-240-240000.0-1-2-1
+CAAAAAAAAAAAAAAAAA
+>2(2)-240-240000.0-1-3-1
+GAAAAAAAAAAAAAAAAA
+>3-200-200000.0-1-4-1
+TAAAAAAAAAAAAAAAAA
+>4-75-75000.0-2-1-0
+CCCCCCCCCAAAAAAAAA
+",
+);
 
     #Return a string containing the entire section
-    return ${$sref};
+    return $text_for{$section};
 }
 
 sub filename_for {

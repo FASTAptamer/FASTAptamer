@@ -1,3 +1,4 @@
+#!/bin/env perl
 use 5.008;  # Require at least Perl version 5.8
 use strict;   # Must declare all variables before using them
 use warnings; # Emit helpful warnings
@@ -5,8 +6,6 @@ use autodie;  # Fatal exceptions for common unrecoverable errors (e.g. w/open)
 
 # Testing-related modules
 use Test::More;                  # provide testing functions (e.g. is, like)
-use Test::LongString;
-use Data::Section -setup;        # Set up labeled DATA sections
 use File::Temp  qw( tempfile );  #
 use File::Slurp qw( slurp    );  # Read a file into a string
 
@@ -48,47 +47,24 @@ sub sref_from {
 sub string_from {
     my $section = shift;
 
-    #Get the scalar reference
-    my $sref = sref_from($section);
-
-    #Return a string containing the entire section
-    return ${$sref};
-}
-
-sub filename_for {
-    my $section           = shift;
-    my ( $fh, $filename ) = tempfile();
-    my $string            = string_from($section);
-    print {$fh} $string;
-    close $fh;
-    return $filename;
-}
-
-sub temp_filename {
-    my ($fh, $filename) = tempfile();
-    close $fh;
-    return $filename;
-}
-
-__DATA__
-__[ input_A ]__
->1-40-400000.00
+    my %text_for = (
+    input_A => ">1-40-400000.00
 AAAAAAAAAAAAAAAAAA
 >1(2)-40-400000.00
 GAAAAAAAAAAAAAAAAA
-__[ input_B ]__
->1-4-400000.00
+",
+    input_B => ">1-4-400000.00
 GAAAAAAAAAAAAAAAAA
 >1(2)-4-400000.00
 AAAAAAAAAAAAAAAAAA
-__[ expected_header  ]__
-Sequence	RPM (x)	RPM (y)	log(base2)(y/x)
-__[ expected_sequence_1  ]__
-AAAAAAAAAAAAAAAAAA	400000.00	400000.00	0
-__[ expected_sequence_2  ]__
-GAAAAAAAAAAAAAAAAA	400000.00	400000.00	0
-__[ expected_histogram ]__
-
+",
+    expected_header => "Sequence	RPM (x)	RPM (y)	log(base2)(y/x)
+",
+    expected_sequence_1 => "AAAAAAAAAAAAAAAAAA	400000.00	400000.00	0
+",
+    expected_sequence_2 => "GAAAAAAAAAAAAAAAAA	400000.00	400000.00	0
+",
+    expected_histogram => "
 
 HISTOGRAM DATA
 Bin	Frequency
@@ -194,3 +170,25 @@ Bin	Frequency
 4.9	0
 5.0	0
 > 5	0
+",
+    );
+
+    #Return a string containing the entire section
+    return $text_for{$section};
+}
+
+sub filename_for {
+    my $section           = shift;
+    my ( $fh, $filename ) = tempfile();
+    my $string            = string_from($section);
+    print {$fh} $string;
+    close $fh;
+    return $filename;
+}
+
+sub temp_filename {
+    my ($fh, $filename) = tempfile();
+    close $fh;
+    return $filename;
+}
+

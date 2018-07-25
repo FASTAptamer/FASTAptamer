@@ -1,3 +1,4 @@
+#!/bin/env perl
 package test;
 use 5.008;    # Require at least Perl version 5.8
 use strict;   # Must declare all variables before using them
@@ -6,7 +7,6 @@ use autodie;  # Fatal exceptions for common unrecoverable errors (e.g. w/open)
 
 # Testing-related modules
 use Test::More;                  # provide testing functions (e.g. is, like)
-use Data::Section -setup;        # Set up labeled DATA sections
 use Path::Tiny;
 
 {
@@ -52,32 +52,8 @@ done_testing();
 
 sub string_from {
     my $section = shift;
-
-    #Get the scalar reference to the section text
-    my $sref = test->section_data($section);
-
-    #Return a string containing the entire section
-    return ${$sref};
-}
-
-sub filename_for {
-    my $section           = shift;
-    my $string   = string_from($section);
-
-    my $tempfile = Path::Tiny->tempfile();
-
-    $tempfile->spew($string); 
-
-    return $tempfile;
-}
-
-sub gzipped_filename {
-    return 't/example.fq.gz';
-}
-
-__DATA__
-__[ input ]__
-@
+    my %text_for = (
+        input => '@
 AAAAAAAAAAAAAAAAAA
 +
 @HHHH@HHHHHHHH@HHH
@@ -101,8 +77,8 @@ HHHHHHHHHHHHHHHHHH
 AAAAAAAAAAAAAAAAAA
 +
 HHHHHHHHHHHHHHHHHH
-__[ input_fasta ]__
->A
+',
+        input_fasta => ">A
 AAAAAAAAAAAAAAAAAA
 >B
 AAAAAAAAAAAAAAAAAA
@@ -114,15 +90,15 @@ GAAAAAAAAAAAAAAAAA
 CCCCCCCCCAAAAAAAAA
 >F
 AAAAAAAAAAAAAAAAAA
-__[ expected ]__
->1-3-500000.00
+",
+        expected => ">1-3-500000.00
 AAAAAAAAAAAAAAAAAA
 >2-2-333333.33
 GAAAAAAAAAAAAAAAAA
 >3-1-166666.67
 CCCCCCCCCAAAAAAAAA
-__[ input_unique_IDs ]__
-@
+",
+        input_unique_IDs => '@
 AAAAAAAAAAAAAAAAAA
 +
 @HHHH@HHHHHHHH@HHH
@@ -162,8 +138,8 @@ AAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAA
 +
 @HHHH@HHHHHHHH@HHH
-__[ expected_unique_IDs_A ]__
->1-6-600000.00
+',
+        expected_unique_IDs_A => ">1-6-600000.00
 AAAAAAAAAAAAAAAAAA
 >2-2-200000.00
 GAAAAAAAAAAAAAAAAA
@@ -171,8 +147,8 @@ GAAAAAAAAAAAAAAAAA
 CCCCCCCCCAAAAAAAAA
 >3(2)-1-100000.00
 AAAAAAAAAGGGGGGGGG
-__[ expected_unique_IDs_B ]__
->1-6-600000.00
+",
+        expected_unique_IDs_B => ">1-6-600000.00
 AAAAAAAAAAAAAAAAAA
 >2-2-200000.00
 GAAAAAAAAAAAAAAAAA
@@ -180,3 +156,26 @@ GAAAAAAAAAAAAAAAAA
 AAAAAAAAAGGGGGGGGG
 >3(2)-1-100000.00
 CCCCCCCCCAAAAAAAAA
+",
+);
+
+    #Return a string containing the entire section
+    return $text_for{$section};
+}
+
+sub filename_for {
+    my $section           = shift;
+    my $string   = string_from($section);
+
+    my $tempfile = Path::Tiny->tempfile();
+
+    $tempfile->spew($string); 
+
+    return $tempfile;
+}
+
+sub gzipped_filename {
+    return 't/example.fq.gz';
+}
+
+
