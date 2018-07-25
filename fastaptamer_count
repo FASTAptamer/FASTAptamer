@@ -233,7 +233,11 @@ exit;
 
 # Open file for reading (as gzipped compressed if name ends in '.gz')
 sub open_input {
-    my $filename = shift;
+    my $input_file_error_message = 
+        "\nCould not open input file or no input file was specified.\n
+        See help documentation [-h], README, or User's Guide for program usage.\n";
+
+    my $filename = shift || die $input_file_error_message;
 
     my $fh;
     if ($filename =~ /\.gz$/xms) {
@@ -250,9 +254,7 @@ sub open_input {
         open($fh, '<', $filename);
     }
     
-    $fh or die		
-        "\nCould not open input file or no input file was specified.\n
-        See help documentation [-h], README, or User's Guide for program usage.\n";
+    $fh or die $input_file_error_message;
 
     return $fh;
 }
