@@ -302,7 +302,7 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 
 VIII. Version History
 
-Version 1.0.14
+Version 1.0.14 - Released July 25, 2018
 Restored error message resulting from empty input file name (Fixed bug introduced in 1.0.13)
 Removed tests' dependencies on non-core Perl modules.
 
