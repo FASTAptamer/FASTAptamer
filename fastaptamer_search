@@ -3,8 +3,8 @@
 ## Last Modified January 19th, 2015 22:54 CST
 
 ## Citation:
-## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
-## "FASTAptamer: A Bioinformatic Toolkit for High-Throughput Sequence Analysis of 
+## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke.
+## "FASTAptamer: A Bioinformatic Toolkit for High-Throughput Sequence Analysis of
 ## Combinatorial Selections." Molecular Therapy -- Nucleic Acids. 2015.
 ## DOI: 10.1038/mtna.2015.4
 
@@ -24,7 +24,7 @@ my $quiet;        # If defined, suppress report in STDOUT
 my $version;      # display version
 
 ## Process command line arguments
-GetOptions (    
+GetOptions (
   "input=s"    => \@inputlist,    # input file(s)
   "output=s"   => \$output,       # output file (optional)
   "pattern=s"  => \@patternlist,  # pattern(s) to search for
@@ -40,14 +40,14 @@ if(defined $help) {  ## Prints help screen if -help is invoked
                               FASTAptamer-Search
 --------------------------------------------------------------------------------
 
-Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] 
+Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN]
 
-    [-help]            	= Help screen.
-    [-i FILENAME]     	= Input file; can be used multiple times. REQUIRED.
-    [-p PATTERN]		= Sequence pattern to search for; can be used multiple 
+    [-help]                = Help screen.
+    [-i FILENAME]         = Input file; can be used multiple times. REQUIRED.
+    [-p PATTERN]        = Sequence pattern to search for; can be used multiple
                           times. REQUIRED.
-    [-o FILENAME]   	= Output file for search results. If none given, output 
-                          goes to STDOUT. 
+    [-o FILENAME]       = Output file for search results. If none given, output
+                          goes to STDOUT.
     [-highlight]        = Highlight matched portion of sequence in parentheses.
     [-q]                = Suppress summary report.
     [-v]                = Display version.
@@ -58,7 +58,7 @@ ore sequence files.
 To search through more than one input file, simply use the [-i] flag multiple t-
 imes. All input files must use FASTA format.
 
-Similarly, to search for multiple patterns simultaneously, use the [-p] flag as 
+Similarly, to search for multiple patterns simultaneously, use the [-p] flag as
 many times as needed. When searching for multiple patterns, note that partial m-
 atches are not returned. For example, entering the following command:
 
@@ -89,7 +89,7 @@ symbols from IUPAC nucleic acid notation:
 For greater visibility, pattern matches can be highlighted by parentheses in the
 output by calling the [-highlight] flag.
 
-A summary report is generated after each file's search results and after search 
+A summary report is generated after each file's search results and after search
 completion. To suppress these reports, enable quiet mode using the [-quiet] flag
 
 HELP
@@ -97,11 +97,11 @@ exit;
 
 }
 
-if (defined $version){                     ## Print version screen if -v is true
+if (defined $version){   ## Print version screen if -v is true
     print <<"VERSION";
-	
+
 FASTAptamer v1.0.16
-	
+
 VERSION
 exit;
 }
@@ -112,31 +112,31 @@ unless(@inputlist) { die "\nCould not open input file or no input file was speci
 
 unless(@patternlist) {die "\nNo search pattern was specified.\nSee help documentation [-h], README, or User's Guide for program usage.\n"; }
 
-my $start_time = time;		## Start timer
+my $start_time = time;        ## Start timer
 
 my $inputcount = scalar(@inputlist);
 my $patterncount = scalar(@patternlist);
 
 ## Convert user-entered patterns into regexes
-my @superarray;		## Array of 2-element arrays via references: ([pattern, regex], [...], etc.)
+my @superarray;        ## Array of 2-element arrays via references: ([pattern, regex], [...], etc.)
 my $regex;
 foreach my $pattern (@patternlist) {
-	$regex = $pattern;
-        $regex =~ s{[TU]}{\[TU\]}gi;	## Make T and U interchangeable
-	$regex =~ s{W}{\[ATU\]}gi;     	## W = ATU	Regex modifiers after s{}{}:
-        $regex =~ s{S}{\[CG\]}gi;      	## S = CG	g tells the script to find ALL matches rather than stop after the first
-        $regex =~ s{M}{\[AC\]}gi;      	## M = AC	i makes searching case insensitive
-        $regex =~ s{K}{\[GTU\]}gi;     	## K = GTU
-        $regex =~ s{R}{\[AG\]}gi;      	## R = AG
-        $regex =~ s{Y}{\[CTU\]}gi;     	## Y = CTU
-        $regex =~ s{B}{\[CGTU\]}gi;    	## B = CGTU
-        $regex =~ s{D}{\[AGTU\]}gi;    	## D = AGTU
-        $regex =~ s{H}{\[ACTU\]}gi;    	## H = ACTU
-        $regex =~ s{V}{\[ACG\]}gi;     	## V = ACG
-        $regex =~ s{N}{\[ACGTU\]}gi;   	## N = ACGTU
-	## Put the pattern and regex into an array and push the whole thing onto @superarray
-	push(@superarray, [$pattern, $regex]);		## Push $subarray onto the end of @superarray
-	}
+    $regex = $pattern;
+    $regex =~ s{[TU]}{\[TU\]}gi;  ## Make T and U interchangeable
+    $regex =~ s{W}{\[ATU\]}gi;    ## W = ATU    Regex modifiers after s{}{}:
+    $regex =~ s{S}{\[CG\]}gi;     ## S = CG       g tells the script to find ALL
+    $regex =~ s{M}{\[AC\]}gi;     ## M = AC         matches rather than stop 
+    $regex =~ s{K}{\[GTU\]}gi;    ## K = GTU        after the first
+    $regex =~ s{R}{\[AG\]}gi;     ## R = AG       i makes searching case insensitive
+    $regex =~ s{Y}{\[CTU\]}gi;    ## Y = CTU
+    $regex =~ s{B}{\[CGTU\]}gi;   ## B = CGTU
+    $regex =~ s{D}{\[AGTU\]}gi;   ## D = AGTU
+    $regex =~ s{H}{\[ACTU\]}gi;   ## H = ACTU
+    $regex =~ s{V}{\[ACG\]}gi;    ## V = ACG
+    $regex =~ s{N}{\[ACGTU\]}gi;  ## N = ACGTU
+    ## Put the pattern and regex into an array and push the whole thing onto @superarray
+    push(@superarray, [$pattern, $regex]);  ## Push $subarray onto the end of @superarray
+    }
 
 my $fh_out;
 if(defined $output) { open($fh_out, '>', $output) or die "\nCould not open output file or no output file was specified.\nSee help documentation [-help], README, or User's Guide for program usage.\n"; }
@@ -155,7 +155,7 @@ my $totalhits = 0;
 
 ## FASTA input
 
-foreach $input (@inputlist) {                
+foreach $input (@inputlist) {
     $current_input++;
     if(defined $output) {
         print $fh_out "\n\n--------------------------------------------------------------------------------\n";
@@ -172,41 +172,41 @@ foreach $input (@inputlist) {
     while($line1 = <$fh_in>) {
         $line2 = <$fh_in>;
         my $not_first_regex = 0;
-        my $hit_confirmed = 0;         
+        my $hit_confirmed = 0;
         foreach $subarray (@superarray) {
             $regex = $subarray->[1];        ## Get the regex from subarray
             ##            $1
-            if($line2 =~ m{($regex)}gi) {           ## Search for all matches, case insensitive
+            if($line2 =~ m{($regex)}gi) {  ## Search for all matches, case insensitive
                 $match_portion = $1;            ## Portion of sequence that matched was captured in magic variable $1
                 if($not_first_regex == 0) { ($match_line = $line2) =~ s{$match_portion}{\($match_portion\)}g; }
                 else { $match_line =~ s{$match_portion}{\($match_portion\)}g; }
                 $not_first_regex = 1;
-                $hit_confirmed++; 
+                $hit_confirmed++;
             }
         }
         if(defined $output and $hit_confirmed == $patterncount) {
-            $filehits++;    ## Increment FILE-SPECIFIC hit counter      
+            $filehits++;    ## Increment FILE-SPECIFIC hit counter
             $totalhits++;   ## Increment OVERALL hit counter
             if (defined $highlight) { print $fh_out "$line1$match_line"; }
             else { print $fh_out "$line1$line2"; }
         }
         elsif(not defined $output and $hit_confirmed == $patterncount) {
-            $filehits++;    ## Increment FILE-SPECIFIC hit counter      
+            $filehits++;    ## Increment FILE-SPECIFIC hit counter
             $totalhits++;   ## Increment OVERALL hit counter
             if (defined $highlight) { print "$line1$match_line"; }
             else { print "$line1$line2"; }
         }
     }
-                
-    if(defined $output and not defined $quiet) {            ## Print file-specific stats, unless quiet mode
-        if ($filehits > 1) { print $fh_out "\nMatched $filehits sequences in file $input.\n"; } 
-        elsif ($filehits == 1) { print $fh_out "\nMatched 1 sequence in file $input.\n"; }                                   
+
+    if(defined $output and not defined $quiet) {  ## Print file-specific stats, unless quiet mode
+        if ($filehits > 1) { print $fh_out "\nMatched $filehits sequences in file $input.\n"; }
+        elsif ($filehits == 1) { print $fh_out "\nMatched 1 sequence in file $input.\n"; }
         elsif ($filehits == 0) { print $fh_out "\nDid not match any sequences in file $input.\n" }
         $filehits = 0;     ## Reset file-specific hit counter after stats are printed
     }
     elsif(not defined $output and not defined $quiet) {
-        if ($filehits > 1) { print "\nMatched $filehits sequences in file $input.\n"; } 
-        elsif ($filehits == 1) { print "\nMatched 1 sequence in file $input.\n"; }                                   
+        if ($filehits > 1) { print "\nMatched $filehits sequences in file $input.\n"; }
+        elsif ($filehits == 1) { print "\nMatched 1 sequence in file $input.\n"; }
         elsif ($filehits == 0) { print "\nDid not match any sequences in file $input.\n" }
         $filehits = 0;     ## Reset file-specific hit counter after stats are printed
     }
@@ -215,26 +215,26 @@ foreach $input (@inputlist) {
 
 ## Print a summary after script completion, unless quiet mode
 unless(defined $quiet) {
-	my $duration = time - $start_time;
-	
-	print "\n--------------------------------------------------------------------------------\n";
-	print " SEARCH RESULT SUMMARY\n";
-	print "--------------------------------------------------------------------------------\n";
-	
-	if($patterncount > 1) { print "Searched for $patterncount patterns:\n"; }
-	elsif($patterncount == 1) { print "Searched for 1 pattern:\n"; }
-	foreach $subarray (@superarray) { print "$subarray->[0]\n"; }
-	
-	print "\nacross the following $inputcount input files:\n";
-	print join("\n", @inputlist);
-	
-	if($totalhits > 1) { print "\n$totalhits sequences were matched.\n"; } 
+    my $duration = time - $start_time;
+
+    print "\n--------------------------------------------------------------------------------\n";
+    print " SEARCH RESULT SUMMARY\n";
+    print "--------------------------------------------------------------------------------\n";
+
+    if($patterncount > 1) { print "Searched for $patterncount patterns:\n"; }
+    elsif($patterncount == 1) { print "Searched for 1 pattern:\n"; }
+    foreach $subarray (@superarray) { print "$subarray->[0]\n"; }
+
+    print "\nacross the following $inputcount input files:\n";
+    print join("\n", @inputlist);
+
+    if($totalhits > 1) { print "\n$totalhits sequences were matched.\n"; }
         elsif($totalhits == 1) { print "\n1 sequence was matched.\n"; }
-	elsif($totalhits == 0) { print "\nDid not find any matches.\n"; }
-	
-	if($duration == 1) { print "\nYour search took 1 second.\n"; }
-	else { print "\nYour search took $duration seconds.\n"; }
-	
-	print "--------------------------------------------------------------------------------\n";
-	print "--------------------------------------------------------------------------------\n";
+    elsif($totalhits == 0) { print "\nDid not find any matches.\n"; }
+
+    if($duration == 1) { print "\nYour search took 1 second.\n"; }
+    else { print "\nYour search took $duration seconds.\n"; }
+
+    print "--------------------------------------------------------------------------------\n";
+    print "--------------------------------------------------------------------------------\n";
 }

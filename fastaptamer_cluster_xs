@@ -4,8 +4,8 @@
 ## changes of vladimirkhramkov)
 
 ## Citation:
-## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
-## "FASTAptamer: A Bioinformatic Toolkit for High-Throughput Sequence Analysis of 
+## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke.
+## "FASTAptamer: A Bioinformatic Toolkit for High-Throughput Sequence Analysis of
 ## Combinatorial Selections." Molecular Therapy -- Nucleic Acids. 2015.
 ## DOI: 10.1038/mtna.2015.4
 
@@ -21,7 +21,7 @@ my $outfile;                ## Variable for output file
 my $defined_edit_distance;  ## Variable (integer) for user-defined edit distance
 my $help;                   ## true/false variable for help screen
 my $quiet;                  ## true/false to suppress standard output
-my $filter = 0;				## Variable to define a read filter for entries
+my $filter = 0;             ## Variable to define a read filter for entries
 my $max_clusters = 9999999999999999; ## Maximum number of clusters
 my $version;                ## true/false variable for version screen
 
@@ -37,7 +37,7 @@ GetOptions (    "infile=s" => \$infile,    ## ... input file
 
 if ($help){         ## Prints help screen if $help returns as true
 print <<"HELP";
-	
+
 --------------------------------------------------------------------------------
                               FASTAptamer-Cluster
 --------------------------------------------------------------------------------
@@ -57,8 +57,8 @@ Usage: fastaptamer_cluster_xs [-h] [-i INFILE] [-o OUTFILE] [-d #] [-f #] [-q] [
 
 FASTAptamer-Cluster uses the Levenshtein algorithm to cluster together sequences
 based on a user-defined edit distance.  The most abundant and unclustered seque-
-nce is used as the "seed sequence" for which edit distance is calculated from.  
-Output is FASTA with the following information on the identifier line for each 
+nce is used as the "seed sequence" for which edit distance is calculated from.
+Output is FASTA with the following information on the identifier line for each
 sequence entry:
 
     >Rank-Reads-RPM-Cluster#-RankWithinCluster-EditDistanceFromSeed
@@ -66,14 +66,14 @@ sequence entry:
 
 To prevent clustering of sequences not highly sampled (and improve execution ti-
 me), invoke the read filter and enter a number.  Only sequences with total reads
-greater than the number entered will be clustered. 
+greater than the number entered will be clustered.
 
-Input for FASTAptamer-Cluster MUST come from a FASTAptamer-Count output file. 
+Input for FASTAptamer-Cluster MUST come from a FASTAptamer-Count output file.
 
 PLEASE NOTE: This is a computationally intense program that can take multiple h-
 ours to finish depending on the size and complexity of your population. Utilize
 the read filter [-f] and/or the maximum number of clusters [-c] to improve ex-
-ecution time. 
+ecution time.
 
 HELP
 exit;
@@ -81,32 +81,32 @@ exit;
 
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
-	
+
 FASTAptamer v1.0.16
-	
+
 VERSION
 exit;
 }
 
-##########################################	
+##########################################
 ## Open input file or exit with warning  #
 ##########################################
 
-open (INPUT, '<', $infile) or die 
+open (INPUT, '<', $infile) or die
 "\nCould not open input file or no input file was specified.\nSee help documentation [-h], README, or User's Guide for program usage.\n";
 
 ##########################################
 ## Open output file or exit with warning #
 ##########################################
 
-open (OUTPUT, '>', $outfile) or die 
+open (OUTPUT, '>', $outfile) or die
 "\nCould not open output file or no input file was specified.\See help documentation [-h], README, or User's Guide for program usage.\n";
 
 ###############################################
 ## Exit with warning if no distance specified #
 ###############################################
 
-unless ($defined_edit_distance) { 
+unless ($defined_edit_distance) {
 die "\nNo edit distance specified.\nSee help documentation [-h], README, or User's Guide for program usage.\n"; }
 
 my @sequence_and_info;   ## Array to contain each FASTA entry individually
@@ -140,7 +140,7 @@ while (<INPUT>){                             ## Reads through entire input file
 close INPUT;  ## Closes input file
 
 unless ($quiet){  ## Unless -q option is invoked, print this warning and summary
-	print "\n**************************************************";
+    print "\n**************************************************";
     print "\nClustering is a computationally intense process.\n";
     print "Please be patient as clustering can take several\n";
     print "hours for a single file.  For faster clustering\n";
@@ -155,7 +155,7 @@ unless ($quiet){  ## Unless -q option is invoked, print this warning and summary
 
 my $iterator = get_cluster_iterator(@sequence_and_info);
 
-while( $iterator->() ) {1} ## Simply repeat until iterator runs out (i.e. 
+while( $iterator->() ) {1} ## Simply repeat until iterator runs out (i.e.
                            ##  until all of the sequences have been processed)
 
 ###############################################
@@ -166,7 +166,7 @@ while( $iterator->() ) {1} ## Simply repeat until iterator runs out (i.e.
 sub get_cluster_iterator {
     my @remaining_sequences = @_;
 
-    my $current_cluster = 1;  ## This variable defines what cluster we're working on 
+    my $current_cluster = 1;  ## This variable defines what cluster we're working on
 
     return sub {
         my ( $top_entry, @entires ) = @remaining_sequences; ## Takes "seed sequence" and remaining entries
@@ -223,6 +223,6 @@ my $duration = time - $start; ## Calculates how much time has elapsed since star
 unless ($quiet) { ## Displays summary report unless -q is invoked
     print "\nInput file: \"$infile\".\n";
     print "Output file: \"$outfile\".\n";
-    print "Execution time: $duration s.\n"; 
+    print "Execution time: $duration s.\n";
 }
 

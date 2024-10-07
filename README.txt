@@ -109,7 +109,7 @@ are tied for second).  READS is the raw number of times a sequence was counted.
 RPM is "Reads per million," which is a normalized value that allows for compari-
 son across populations of varying read depth. RPM is calculated as:
 
-	RPM = (READS/(population size)) x 10^6.
+    RPM = (READS/(population size)) x 10^6.
 
 In addition to generating a FASTA output file, FASTAptamer-Count will display a
 summary report on the screen (STDOUT) that includes the number of total reads f-
@@ -245,7 +245,7 @@ Usage: fastaptamer_enrich [-h] [-x INFILE] [-y INFILE] [-z INFILE] [-o OUTFILE]
                       FASTAptamer-Cluster. REQUIRED.
                       *** For two populations only, use -x and -y. ***
     [-z INFILE]     = Optional third input file from FASTAptamer-Count or
-    				  FASTAptamer-Cluster.
+                      FASTAptamer-Cluster.
     [-o OUTFILE]    = Plain text output file with tab separated values. REQUIRED
     [-f]            = Optional reads per million threshold filter.
     [-q]            = Quiet mode.  Suppresses standard output of file I/O,
