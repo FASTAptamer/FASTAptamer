@@ -7,7 +7,6 @@ use autodie;  # Fatal exceptions for common unrecoverable errors (e.g. w/open)
 # Testing-related modules
 use Test::More;                  # provide testing functions (e.g. is, like)
 use File::Temp  qw( tempfile );  #
-use File::Slurp qw( slurp    );  # Read a file into a string
 
 
 {
@@ -15,7 +14,7 @@ use File::Slurp qw( slurp    );  # Read a file into a string
     my $input_B  = filename_for('input_B');
     my $output_filename = temp_filename();
     system("perl fastaptamer_compare -x $input_A -y $input_B -o $output_filename");
-    my $result   = slurp $output_filename;
+    my $result   = slurp($output_filename);
 
     my $expected_A = string_from('expected_header')
                    . string_from('expected_sequence_1')
@@ -186,9 +185,17 @@ sub filename_for {
     return $filename;
 }
 
+sub slurp {
+    my $file = shift;
+    open(my $fh, '<', $file) or die;
+    local $/ = undef;
+    my $text = readline $fh;
+    close $fh;
+    return $text;
+}
+
 sub temp_filename {
     my ($fh, $filename) = tempfile();
     close $fh;
     return $filename;
 }
-
