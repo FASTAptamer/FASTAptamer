@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-## Last Modified March 10th, 2015 13:53 CDT by Christopher Bottoms
+## Last Modified October 7th, 2024 20:41 UTC by Christopher Bottoms
 
 ## Citation:
 ## Khalid K. Alam, Jonathan L. Chang & Donald H. Burke. 
@@ -79,7 +79,7 @@ exit;
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
 	
-FASTAptamer v1.0.14
+FASTAptamer v1.0.16
 	
 VERSION
 exit;
@@ -147,7 +147,7 @@ unless ($quiet){  ## Unless -q option is invoked, print this warning and summary
     print "number of clusters that you are interested in. \n";
     print "**************************************************";
     print "\n\nTotal number of sequences to cluster: $entries.\n";
-    print "\nCluster\tUnique Sequences\tReads\tRPM\n";
+    print "\nCluster\tUnique_Sequences\tReads\tRPM\tSeed_Sequence\n";
 }
 
 my $iterator = get_cluster_iterator(@sequence_and_info);
@@ -200,7 +200,7 @@ sub get_cluster_iterator {
             }
         }
 
-        unless ($quiet) { print "$current_cluster\t$cluster_rank\t$current_cluster_reads\t$current_cluster_rpm\n"; }
+        unless ($quiet) { print "$current_cluster\t$cluster_rank\t$current_cluster_reads\t$current_cluster_rpm\t$current_seq_info[1]\n"; }
         ## Display cluster number, number of unique sequences, reads and RPM
         $current_cluster++; ## Increment cluster number prior to next cluster
 

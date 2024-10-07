@@ -24,6 +24,7 @@ my $start = time;    ## Starts program execution timer
 my $input_filename;  ## Input file name
 my $output_filename; ## Output file name
 my $quiet;           ## true/false variable for summary report supression
+my $csv_filename;    ## file name for outputting CSV file (optional)
 my $help;            ## true/false variable for help screen
 my $version;         ## true/false variable for version screen
 my $fasta;           ## input is in FASTA format
@@ -34,6 +35,7 @@ GetOptions (    "input=s"  => \$input_filename,  ## ...input file
                 "quiet"    => \$quiet,           ## ...supressing std. out
                 "version"  => \$version,         ## ...showing version screen
                 "fasta"    => \$fasta,           ## ...format of input file is FASTA
+                "csv=s"    => \$csv_filename,    ## ...output CSV file too
                 "unique"   => \$unique,          ## ...creating unique seq IDs
                 "help"     => \$help);           ## ...showing help screen
 
@@ -49,9 +51,10 @@ Usage: fastaptamer_count [-h] [-q] [-v] [-i INFILE] [-o OUTFILE]
     [-h]            = Help screen.
     [-q]            = Suppress STDOUT of run report.
     [-v]            = Display version.
-    [-i INFILE]     = input file. REQUIRED.
+    [-i INFILE]     = input file. REQUIRED (FASTQ unless -f specified).
     [-o OUTFILE]    = FASTA output file. REQUIRED.
     [-f ]           = input file is in FASTA format (otherwise it must be FASTQ)
+    [-c CSV_OUT]    = output CSV format (to file CSV_OUT)
     [-u ]           = Create unique sequence ID's
 
 FASTAptamer-Count serves as the gateway to the FASTAptamer toolkit.  For a given
@@ -61,11 +64,23 @@ uences by decreasing total reads, and normalize sequence frequency to reads per
 million. Output is generated as a non-redundant FASTA file in the following for-
 mat for each sequence:
 
-        >RANK-READS-RPM
-        SEQUENCE
-		
-Summary report (total reads, unique reads, and execution time) is displayed as 
-STDOUT at program completion unless [-q] is invoked.
+    >RANK-READS-RPM
+    SEQUENCE
+
+Where RANK is the relative abundance of the sequence within the population. In
+cases where two or more sequences are sampled with equal abundance, FASTAptamer-
+Count follows standard competition ranking (e.g., "1-2-2-4" where two sequences
+are tied for second).  READS is the raw number of times a sequence was counted.
+RPM is "Reads per million," which is a normalized value that allows for compari-
+son across populations of varying read depth. RPM is calculated as:
+
+	RPM = (READS/(population size)) x 10^6.
+
+In addition to generating a FASTA output file, FASTAptamer-Count will display a
+summary report on the screen (STDOUT) that includes the number of total reads f-
+ound in the input file, the number of unique sequences, the file input/output n-
+ames and the program execution time. The  summary report can be suppressed by i-
+ncluding the optional flag [-q] on the command line.
 
 If the -u flag is used, the FASTA file will have the following format (starting
 at the second sequence that has the same rank):
@@ -77,15 +92,21 @@ Where UNIQ is a numeric label that distinguishes sequences with identical
 RANK and READS (and therefore identical RPM too). This label starts at '2' and
 increments by one for each new sequence that has the same RANK. This label is r-
 eset each time RANK increases.
+
+Summary report (total reads, unique reads, and execution time) is displayed as
+STDOUT at program completion unless [-q] is invoked.
+
+If a CSV output filename is given, then a csv file is output with the columns
+"rank,sequence,count,cpm,percent".
 HELP
 exit;
 }
 
 if (defined $version){                     ## Print version screen if -v is true
     print <<"VERSION";
-	
-FASTAptamer v1.0.14
-	
+
+FASTAptamer v1.0.16
+
 VERSION
 exit;
 }
@@ -100,7 +121,16 @@ my $fh_in = open_input($input_filename);
 ## Open output file or exit with warning #
 ##########################################
 
-open (my $fh_out, '>', $output_filename) or die		
+my $fh_csv;
+
+if ($csv_filename) {
+    open ($fh_csv, '>', $csv_filename) or die "\nCould not open output CSV file\n
+See help documentation [-h].\n";
+
+    print $fh_csv "rank,sequence,count,cpm,percent\n";
+}
+
+open (my $fh_out, '>', $output_filename) or die
 "\nCould not open output file or no output file was specified.\n
 See help documentation [-h], README, or User's Guide for program usage.\n";
 
@@ -151,6 +181,7 @@ if (!$fasta){
 
 if ($fasta){
     # While loop terminates when no more lines can be read from $fh_in
+    # THIS EXPECTS TWO LINES PER FASTA SEQUENCE
     while (my $seq_header = readline $fh_in){
         my $sequence    = readline $fh_in;
         chomp $sequence;
@@ -179,41 +210,76 @@ my @vals = @sequence_reads{@keys};
 ##################################################################################
 
 my $last_reads_count = 0;
-                    
+
 my $rank = 1;
 
 my $uniq_label = 1;
 for my $i (0..$#keys){
     my $current_reads_count = $vals[$i];
+    my $sequence = $keys[$i];
+
+    # Calculate percent and counts per million
+    my $percent = ($current_reads_count/$entries) * 100;
+    my $cpm = $percent * 10000;
+
+    # Unpack sequence and count
     if ($current_reads_count != $last_reads_count){
 
         # New rank, so increment rank, and reset unique label
-        $rank       = $i + 1; 
+        $rank       = $i + 1;
         $uniq_label = 1;
 
         print $fh_out ">$rank";
-        print $fh_out "-$vals[$i]-";
-        printf $fh_out "%.2f", ($current_reads_count/$entries)*(1000000);
+        print $fh_out "-$current_reads_count-";
+        printf $fh_out "%.2f", $cpm;
         print $fh_out "\n";
-        print $fh_out "$keys[$i]\n";
+        print $fh_out "$sequence\n";
+        if ($csv_filename) {
+            print $fh_csv join(",",
+                               $rank,
+                               $sequence,
+                               $current_reads_count,
+                               $cpm,
+                               $percent);
+            print $fh_csv "\n";
+        }
     }
     elsif ($current_reads_count == $last_reads_count){
+        my $rank_label = $rank;
 
         # Old rank, so increment unique label
         $uniq_label++;
 
-        print $fh_out ">$rank";
-        print $fh_out "($uniq_label)" if $unique;
-        print $fh_out "-$vals[$i]-";
-        printf $fh_out "%.2f", ($current_reads_count/$entries)*(1000000);
-        print $fh_out "\n";
-        print $fh_out "$keys[$i]\n";
+        # Append unique label if requested
+        if ($unique) {
+            $rank_label = "$rank($uniq_label)";
+        }
 
+        print $fh_out ">$rank_label";
+        print $fh_out "-$current_reads_count-";
+        printf $fh_out "%.2f", $cpm;
+        print $fh_out "\n";
+        print $fh_out "$sequence\n";
+
+        if ($csv_filename) {
+            print $fh_csv join(",",
+                               $rank_label,
+                               $sequence,
+                               $current_reads_count,
+                               $cpm,
+                               $percent);
+            print $fh_csv "\n";
+        }
     }
-    $last_reads_count = $vals[$i];
+    # Update last reads count before next iteration
+    $last_reads_count = $current_reads_count;
 }
 
 close $fh_out;
+
+if ($csv_filename) {
+    close $fh_csv;
+}
 
 ##################################################################################
 ## Unless the -q option is invoked, the following statistics are printed as      #

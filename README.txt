@@ -1,6 +1,6 @@
---------------------------------------------------------------------------------  
- 
-FASTAptamer v1.0.14
+--------------------------------------------------------------------------------
+
+FASTAptamer v1.0.16
 
 If you use, adapt, or modify FASTAptamer please cite:
 Khalid K. Alam, Jonathan L. Chang & Donald H. Burke
@@ -123,8 +123,10 @@ Usage: fastaptamer_count [-h] [-q] [-v] [-i INFILE] [-o OUTFILE]
     [-h]            = Help screen.
     [-q]            = Suppress STDOUT of run report.
     [-v]            = Display version.
-    [-i INFILE]     = FASTQ input file. REQUIRED.
+    [-i INFILE]     = input file. REQUIRED (FASTQ unless -f specified).
     [-o OUTFILE]    = FASTA output file. REQUIRED.
+    [-f ]           = input file is in FASTA format (otherwise it must be FASTQ)
+    [-c CSV_OUT]    = output CSV format (to file CSV_OUT)
     [-u ]           = Create unique sequence ID's
 
 If the -u flag is used, the FASTA file will have the following format (starting
@@ -137,6 +139,12 @@ Where UNIQ is a numeric label that distinguishes sequences with identical
 RANK and READS (and therefore identical RPM too). This label starts at '2' and
 increments by one for each new sequence that has the same RANK. This label is r-
 eset each time RANK increases.
+
+Summary report (total reads, unique reads, and execution time) is displayed as
+STDOUT at program completion unless [-q] is invoked.
+
+If a CSV output filename is given, then a csv file is output with the columns
+"rank,sequence,count,cpm,percent".
 
 --------------------------------------------------------------------------------
 
@@ -302,6 +310,12 @@ Usage: fastaptamer_search [-i INFILE] [-o OUTFILE] [-p PATTERN] [-v]
 --------------------------------------------------------------------------------
 
 VIII. Version History
+
+Version 1.0.16 - Released October 7, 2024
+Added CSV output option for fastaptamer_count.
+
+Version 1.0.15
+Added "Seed sequence" column to fastaptamer_cluster summary"
 
 Version 1.0.14 - Released July 25, 2018
 Restored error message resulting from empty input file name (Fixed bug introduced in 1.0.13)
