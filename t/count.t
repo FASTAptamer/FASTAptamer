@@ -12,10 +12,17 @@ use File::Temp qw(tempfile);
 {
     my $input_filename  = filename_for('input');
     my $output_filename = temp_filename();
-    system("./fastaptamer_count -i $input_filename -o $output_filename");
+    my $csv_out_filename = temp_filename();
+
+    system("./fastaptamer_count -i $input_filename -o $output_filename -c $csv_out_filename");
+
     my $result   = slurp($output_filename);
     my $expected = string_from('expected');
-    is( $result, $expected, 'successfully created count file' );
+    is($result, $expected, 'successfully created count file' );
+
+    my $result_csv   = slurp($csv_out_filename);
+    my $expected_csv = string_from('expected_csv');
+    is($result_csv, $expected_csv, 'successfully created CSV count output' );
 }
 
 {
@@ -24,7 +31,7 @@ use File::Temp qw(tempfile);
     system("./fastaptamer_count -f -i $input_filename -o $output_filename");
     my $result   = slurp($output_filename);
     my $expected = string_from('expected');
-    is( $result, $expected, 'successfully created count file from FASTA input' );
+    is($result, $expected, 'successfully created count file from FASTA input' );
 }
 
 {
@@ -138,6 +145,11 @@ AAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAA
 +
 @HHHH@HHHHHHHH@HHH
+',
+        expected_csv => 'rank,sequence,count,cpm,percent
+1,AAAAAAAAAAAAAAAAAA,3,500000,50
+2,GAAAAAAAAAAAAAAAAA,2,333333.333333333,33.3333333333333
+3,CCCCCCCCCAAAAAAAAA,1,166666.666666667,16.6666666666667
 ',
         expected_unique_IDs_A => ">1-6-600000.00
 AAAAAAAAAAAAAAAAAA
